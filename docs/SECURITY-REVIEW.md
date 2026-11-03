@@ -38,7 +38,8 @@ Các lỗ hổng #1–#2 là lỗi **do tôi tạo ra ở bản Rules đầu** v
 - Giới hạn: **không có giới hạn tốc độ gửi** (Rules không đếm được theo thời gian) → một thành viên có thể spam và tiêu hạn mức ghi Spark; cách xử lý hiện tại là Owner xóa tin/xóa thành viên. Tin nhắn **không mã hóa đầu-cuối** (Google lưu dạng thường như mọi dữ liệu Firestore). Chấm "chưa đọc" lưu trên trình duyệt (localStorage), không đồng bộ giữa các máy.
 
 ## Rủi ro còn lại / giới hạn
-1. Ruleset `main` cho phép **admin repo bỏ qua** (1 người quản trị, không có người review thứ hai); không yêu cầu PR review.
+0. Khi chuyển repo sang Organization, GitHub đã **tự tắt secret scanning + push protection**; đã bật lại (04/11/2026). Cài đặt cấp Organization (quyền Actions mặc định, 2FA bắt buộc cho thành viên) **chưa kiểm** vì token CLI không có quyền `admin:org` – nên tự kiểm trong Organization → Settings.
+1. Repo thuộc Organization `IFSS-Vibe-code` (gói Free). Ruleset `main` cho phép **admin repo bỏ qua** (1 người quản trị, không có người review thứ hai); không yêu cầu PR review.
 2. Repo **public** (theo lựa chọn của người dùng, để dùng Pages miễn phí): mã nguồn công khai; bảo mật dựa vào Rules, không dựa vào việc giấu mã.
 3. CSP bằng thẻ meta không hỗ trợ `frame-ancestors`/report; dùng frame-buster (#4).
 4. Email xác minh/đặt lại mật khẩu dùng mẫu & hạn mức mặc định của Firebase; chưa tùy biến.
