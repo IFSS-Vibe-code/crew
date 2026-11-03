@@ -1,0 +1,380 @@
+rules_version = '2';
+
+// KhoaFlow – Firestore Security Rules
+// Nguyên tắc: mặc định từ chối; mọi đường dẫn phải được khai báo quyền rõ ràng.
+// Vai trò lấy từ /workspaces/{ws}/members/{uid} (chỉ Owner sửa được role/unitIds).
+// Xem docs/SECURITY-REVIEW.md và tests/rules/*.test.js.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Hàm dùng chung ----------
+    function signedIn() { return request.auth != null; }
+    function verified() {
+      return signedIn() && request.auth.token.email_verified == true
+        && request.auth.token.email is string;
+    }
+    function uid() { return request.auth.uid; }
+    function memberPath(ws) { return /databases/$(database)/documents/workspaces/$(ws)/members/$(uid()); }
+    function isMember(ws) { return verified() && exists(memberPath(ws)); }
+    function me(ws) { return get(memberPath(ws)).data; }
+    function isOwner(ws) { return isMember(ws) && me(ws).role == 'owner'; }
+    function privileged(ws) { return isMember(ws) && me(ws).role in ['owner', 'approver']; }
+    function isManagerOrOwner(ws) { return isMember(ws) && me(ws).role in ['owner', 'manager']; }
+    function managesUnit(ws, unitId) {
+      return isMember(ws) && me(ws).role == 'manager' && unitId in me(ws).unitIds;
+    }
+    function ownerOrManagesUnit(ws, unitId) { return isOwner(ws) || managesUnit(ws, unitId); }
+    function unitExists(ws, unitId) {
+      return unitId is string && exists(/databases/$(database)/documents/workspaces/$(ws)/units/$(unitId));
+    }
+    function memberExists(ws, memberUid) {
+      return memberUid is string && exists(/databases/$(database)/documents/workspaces/$(ws)/members/$(memberUid));
+    }
+
+    function str(v, min, max) { return v is string && v.size() >= min && v.size() <= max; }
+    function optStr(v, max) { return v == null || (v is string && v.size() <= max); }
+    function isoDate(v) { return v is string && v.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$'); }
+    function optDate(v) { return v == null || isoDate(v); }
+    function httpsUrl(v) { return v is string && v.size() <= 2000 && v.matches('^https://.+'); }
+    function unchanged(keys) { return !request.resource.data.diff(resource.data).affectedKeys().hasAny(keys); }
+    function onlyChanged(keys) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys); }
+    function stamped() {
+      return request.resource.data.updatedAt == request.time && request.resource.data.updatedBy == uid();
+    }
+
+    // ---------- Lời mời: truy vấn collection group theo email người được mời ----------
+    match /{path=**}/invites/{inviteId} {
+      allow read: if verified() && resource.data.email == request.auth.token.email;
+    }
+
+    // ---------- Danh sách Workspace của chính người dùng ----------
+    match /users/{userId}/memberships/{ws} {
+      allow read: if signedIn() && userId == uid();
+      allow create: if verified() && userId == uid()
+        && existsAfter(/databases/$(database)/documents/workspaces/$(ws)/members/$(uid()))
+        && request.resource.data.keys().hasOnly(['workspaceId', 'workspaceName', 'joinedAt'])
+        && request.resource.data.workspaceId == ws
+        && str(request.resource.data.workspaceName, 1, 100)
+        && request.resource.data.joinedAt == request.time;
+      allow update: if verified() && userId == uid() && isMember(ws)
+        && onlyChanged(['workspaceName']) && str(request.resource.data.workspaceName, 1, 100);
+      allow delete: if signedIn() && userId == uid();
+    }
+
+    match /workspaces/{ws} {
+      function validWorkspace(d) {
+        return d.keys().hasOnly(['name', 'type', 'academicYear', 'contactEmail', 'ownerUid', 'settings', 'createdAt', 'updatedAt', 'updatedBy'])
+          && str(d.name, 1, 100) && str(d.type, 1, 60)
+          && optStr(d.academicYear, 20) && optStr(d.contactEmail, 254)
+          && d.settings is map
+          && d.settings.keys().hasOnly(['remindBeforeDeadlineHours', 'approvalWaitWarnDays', 'requireEvidenceOnComplete', 'allowConditionalPrep'])
+          && d.settings.remindBeforeDeadlineHours is int && d.settings.remindBeforeDeadlineHours >= 0 && d.settings.remindBeforeDeadlineHours <= 336
+          && d.settings.approvalWaitWarnDays is int && d.settings.approvalWaitWarnDays >= 1 && d.settings.approvalWaitWarnDays <= 120
+          && d.settings.requireEvidenceOnComplete is bool && d.settings.allowConditionalPrep is bool;
+      }
+      allow read: if isMember(ws);
+      allow create: if verified()
+        && validWorkspace(request.resource.data)
+        && request.resource.data.ownerUid == uid()
+        && request.resource.data.createdAt == request.time && stamped()
+        && existsAfter(/databases/$(database)/documents/workspaces/$(ws)/members/$(uid()));
+      allow update: if isOwner(ws) && validWorkspace(request.resource.data)
+        && unchanged(['ownerUid', 'createdAt']) && stamped();
+      allow delete: if false;
+
+      // ---------- Thành viên ----------
+      match /members/{memberUid} {
+        function validMember(d) {
+          return d.keys().hasOnly(['uid', 'email', 'displayName', 'role', 'unitIds', 'joinedAt', 'updatedAt'])
+            && d.uid == memberUid && str(d.email, 3, 254) && str(d.displayName, 1, 100)
+            && d.role in ['owner', 'approver', 'manager', 'member', 'lecturer']
+            && d.unitIds is list && d.unitIds.size() <= 10;
+        }
+        function wsOwnerUid() { return get(/databases/$(database)/documents/workspaces/$(ws)).data.ownerUid; }
+        function invitePath() { return /databases/$(database)/documents/workspaces/$(ws)/invites/$(request.auth.token.email); }
+
+        allow read: if isMember(ws);
+        // (a) Người tạo Workspace tự thêm mình làm Owner trong cùng batch tạo Workspace.
+        // (b) Người được mời (email đã xác minh) nhận lời mời: role/unitIds phải khớp lời mời và lời mời bị xóa trong cùng batch.
+        allow create: if verified() && memberUid == uid()
+          && validMember(request.resource.data)
+          && request.resource.data.email == request.auth.token.email
+          && request.resource.data.joinedAt == request.time && request.resource.data.updatedAt == request.time
+          && (
+            (request.resource.data.role == 'owner'
+              && !exists(/databases/$(database)/documents/workspaces/$(ws))
+              && getAfter(/databases/$(database)/documents/workspaces/$(ws)).data.ownerUid == uid()
+              && request.resource.data.unitIds.size() == 0)
+            ||
+            (exists(invitePath())
+              && get(invitePath()).data.role == request.resource.data.role
+              && get(invitePath()).data.unitIds == request.resource.data.unitIds
+              && !existsAfter(invitePath()))
+          );
+        // Owner đổi vai trò / bộ phận; không hạ quyền chủ sở hữu gốc của Workspace.
+        // Thành viên chỉ được đổi tên hiển thị của chính mình.
+        allow update: if validMember(request.resource.data)
+          && unchanged(['uid', 'email', 'joinedAt']) && request.resource.data.updatedAt == request.time
+          && (
+            (isOwner(ws) && (memberUid != wsOwnerUid() || request.resource.data.role == 'owner'))
+            || (isMember(ws) && memberUid == uid() && onlyChanged(['displayName', 'updatedAt']))
+          );
+        allow delete: if memberUid != wsOwnerUid() && (isOwner(ws) || (isMember(ws) && memberUid == uid()));
+      }
+
+      // ---------- Lời mời (id = email viết thường) ----------
+      match /invites/{email} {
+        function validInvite(d) {
+          return d.keys().hasOnly(['workspaceId', 'workspaceName', 'email', 'role', 'unitIds', 'displayName', 'invitedBy', 'createdAt'])
+            && d.workspaceId == ws && d.email == email && str(d.email, 3, 254) && d.email.lower() == d.email
+            && str(d.workspaceName, 1, 100)
+            && d.role in ['approver', 'manager', 'member', 'lecturer']
+            && d.unitIds is list && d.unitIds.size() <= 10
+            && optStr(d.displayName, 100) && d.invitedBy == uid();
+        }
+        allow read: if isOwner(ws) || (verified() && request.auth.token.email == email);
+        allow create, update: if isOwner(ws) && validInvite(request.resource.data) && request.resource.data.createdAt == request.time;
+        allow delete: if isOwner(ws) || (verified() && request.auth.token.email == email);
+      }
+
+      // ---------- Ban / CLB / Bộ phận ----------
+      match /units/{unitId} {
+        function validUnit(d) {
+          return d.keys().hasOnly(['name', 'description', 'managerLabel', 'icon', 'createdAt', 'updatedAt', 'updatedBy'])
+            && str(d.name, 1, 100) && optStr(d.description, 300) && optStr(d.managerLabel, 100) && optStr(d.icon, 4);
+        }
+        allow read: if isMember(ws);
+        allow create: if isOwner(ws) && validUnit(request.resource.data) && request.resource.data.createdAt == request.time && stamped();
+        allow update: if isOwner(ws) && validUnit(request.resource.data) && unchanged(['createdAt']) && stamped();
+        allow delete: if isOwner(ws);
+      }
+
+      // ---------- Bộ đếm mã công việc #TK-xxx ----------
+      match /counters/{name} {
+        allow read: if isMember(ws);
+        allow create: if isOwner(ws) && name == 'tasks'
+          && request.resource.data.keys().hasOnly(['next']) && request.resource.data.next == 0;
+        allow update: if isManagerOrOwner(ws) && name == 'tasks'
+          && onlyChanged(['next']) && request.resource.data.next == resource.data.next + 1;
+      }
+
+      // ---------- Công việc ----------
+      match /tasks/{taskId} {
+        function validTask(d) {
+          return d.keys().hasAll(['title', 'unitId', 'type', 'status', 'priority', 'seq', 'createdBy', 'createdAt', 'updatedAt', 'updatedBy'])
+            && d.keys().hasOnly(['title', 'description', 'unitId', 'type', 'status', 'priority', 'assigneeUid', 'assigneeName',
+                                 'collaboratorUids', 'startDate', 'dueDate', 'eventId', 'progress', 'checklist', 'evidence',
+                                 'seq', 'createdBy', 'createdAt', 'updatedAt', 'updatedBy', 'completedOn'])
+            && str(d.title, 1, 200) && optStr(d.get('description', null), 5000)
+            && d.type in ['Sự kiện', 'Đoàn - Hội', 'Học thuật', 'Giảng dạy & cố vấn', 'Hành chính', 'Đối ngoại']
+            && d.status in ['Nháp', 'Chưa bắt đầu', 'Đang thực hiện', 'Chờ phê duyệt', 'Chuẩn bị có điều kiện', 'Đã duyệt', 'Chờ nghiệm thu', 'Hoàn thành', 'Tạm hoãn/Hủy']
+            && d.priority in ['Cao', 'Trung bình', 'Thấp']
+            && d.seq is int && d.seq > 0
+            && optDate(d.get('startDate', null)) && optDate(d.get('dueDate', null)) && optDate(d.get('completedOn', null))
+            && (d.get('progress', 0) is int && d.get('progress', 0) >= 0 && d.get('progress', 0) <= 100)
+            && d.get('checklist', []) is list && d.get('checklist', []).size() <= 50
+            && d.get('evidence', []) is list && d.get('evidence', []).size() <= 20
+            && d.get('collaboratorUids', []) is list && d.get('collaboratorUids', []).size() <= 20
+            && optStr(d.get('assigneeName', null), 100) && optStr(d.get('eventId', null), 100)
+            && (d.get('assigneeUid', null) == null || memberExists(ws, d.assigneeUid));
+        }
+        function canRead(d) {
+          return privileged(ws) || d.unitId in me(ws).unitIds
+            || d.get('assigneeUid', null) == uid() || uid() in d.get('collaboratorUids', []);
+        }
+        function isAssignee(d) { return d.get('assigneeUid', null) == uid() || uid() in d.get('collaboratorUids', []); }
+
+        allow read: if isMember(ws) && canRead(resource.data);
+        allow create: if isMember(ws)
+          && ownerOrManagesUnit(ws, request.resource.data.unitId)
+          && unitExists(ws, request.resource.data.unitId)
+          && validTask(request.resource.data)
+          && request.resource.data.createdBy == uid()
+          && request.resource.data.createdAt == request.time && stamped()
+          && request.resource.data.seq == getAfter(/databases/$(database)/documents/workspaces/$(ws)/counters/tasks).data.next
+          && get(/databases/$(database)/documents/workspaces/$(ws)/counters/tasks).data.next + 1 == request.resource.data.seq;
+        allow update: if isMember(ws) && validTask(request.resource.data) && stamped()
+          && unchanged(['createdBy', 'createdAt', 'seq'])
+          && (
+            // Owner / Trưởng Ban của cả Ban cũ và Ban mới: sửa toàn bộ.
+            (ownerOrManagesUnit(ws, resource.data.unitId) && ownerOrManagesUnit(ws, request.resource.data.unitId)
+              && unitExists(ws, request.resource.data.unitId))
+            ||
+            // Người được giao / phối hợp: chỉ cập nhật tiến độ.
+            (isAssignee(resource.data)
+              && onlyChanged(['status', 'progress', 'checklist', 'evidence', 'completedOn', 'updatedAt', 'updatedBy'])
+              // Không tự đặt "Đã duyệt" (chỉ Owner/Trưởng Ban); "Hoàn thành" cần minh chứng nếu Workspace yêu cầu.
+              && (request.resource.data.status == resource.data.status || request.resource.data.status != 'Đã duyệt')
+              && (request.resource.data.status != 'Hoàn thành'
+                  || !get(/databases/$(database)/documents/workspaces/$(ws)).data.settings.requireEvidenceOnComplete
+                  || request.resource.data.get('evidence', []).size() > 0))
+          );
+        allow delete: if ownerOrManagesUnit(ws, resource.data.unitId);
+
+        function parentTask() { return get(/databases/$(database)/documents/workspaces/$(ws)/tasks/$(taskId)).data; }
+        // Khi ghi: dùng trạng thái sau batch để ghi lịch sử được trong cùng transaction tạo/sửa công việc.
+        function parentTaskAfter() { return getAfter(/databases/$(database)/documents/workspaces/$(ws)/tasks/$(taskId)).data; }
+
+        match /comments/{commentId} {
+          allow read: if isMember(ws) && canRead(parentTask());
+          allow create: if isMember(ws) && canRead(parentTaskAfter())
+            && request.resource.data.keys().hasOnly(['text', 'authorUid', 'authorName', 'createdAt'])
+            && request.resource.data.authorUid == uid() && str(request.resource.data.text, 1, 2000)
+            && str(request.resource.data.authorName, 1, 100) && request.resource.data.createdAt == request.time;
+          allow delete: if isMember(ws) && (resource.data.authorUid == uid() || isOwner(ws));
+        }
+        match /activity/{activityId} {
+          allow read: if isMember(ws) && canRead(parentTask());
+          allow create: if isMember(ws) && canRead(parentTaskAfter())
+            && request.resource.data.keys().hasOnly(['action', 'detail', 'actorUid', 'actorName', 'createdAt'])
+            && request.resource.data.actorUid == uid() && str(request.resource.data.action, 1, 100)
+            && optStr(request.resource.data.detail, 500) && str(request.resource.data.actorName, 1, 100)
+            && request.resource.data.createdAt == request.time;
+        }
+      }
+
+      // ---------- Dự án & Sự kiện ----------
+      match /events/{eventId} {
+        function validEvent(d) {
+          return d.keys().hasOnly(['title', 'description', 'type', 'status', 'unitId', 'date', 'location', 'createdBy', 'createdAt', 'updatedAt', 'updatedBy'])
+            && str(d.title, 1, 200) && optStr(d.description, 5000) && optStr(d.location, 300)
+            && d.type in ['Phong trào', 'Sự kiện', 'Học thuật', 'Cấp Trường', 'Hành chính', 'Đối ngoại']
+            && d.status in ['Mới tiếp nhận', 'Đang chuẩn bị', 'Chờ duyệt', 'Chuẩn bị có điều kiện', 'Đã duyệt', 'Đang tổ chức', 'Tổng kết', 'Hoàn thành', 'Tạm hoãn/Hủy']
+            && optDate(d.date) && unitExists(ws, d.unitId);
+        }
+        allow read: if isMember(ws);
+        allow create: if ownerOrManagesUnit(ws, request.resource.data.unitId) && validEvent(request.resource.data)
+          && request.resource.data.createdBy == uid() && request.resource.data.createdAt == request.time && stamped();
+        allow update: if ownerOrManagesUnit(ws, resource.data.unitId) && ownerOrManagesUnit(ws, request.resource.data.unitId)
+          && validEvent(request.resource.data) && unchanged(['createdBy', 'createdAt']) && stamped();
+        allow delete: if ownerOrManagesUnit(ws, resource.data.unitId);
+      }
+
+      // ---------- Phê duyệt kế hoạch ----------
+      match /approvals/{approvalId} {
+        function validApproval(d) {
+          return d.keys().hasOnly(['title', 'unitId', 'eventId', 'note', 'requireSchoolLevel', 'steps', 'currentStep', 'status',
+                                   'submittedAt', 'history', 'createdBy', 'createdAt', 'updatedAt', 'updatedBy'])
+            && str(d.title, 1, 200) && optStr(d.note, 2000) && optStr(d.eventId, 100)
+            && d.requireSchoolLevel is bool
+            && d.steps is list && d.steps.size() >= 1 && d.steps.size() <= 2
+            && d.steps.size() == (d.requireSchoolLevel ? 2 : 1)
+            && d.currentStep is int && d.currentStep >= 0 && d.currentStep < d.steps.size()
+            && d.status in ['Nháp', 'Chờ xử lý', 'Cần bổ sung', 'Đã duyệt', 'Từ chối']
+            && optDate(d.submittedAt)
+            && d.history is list && d.history.size() <= 50
+            && unitExists(ws, d.unitId);
+        }
+        // Lịch sử chỉ được nối thêm tối đa 1 mục do chính người ghi thực hiện; các mục cũ không đổi.
+        function historyAppendOnly() {
+          let o = resource.data.history;
+          let n = request.resource.data.history;
+          return n.size() >= o.size() && n.size() <= o.size() + 1
+            && (o.size() == 0 || n[0:o.size()] == o)
+            && (n.size() == o.size() || n[o.size()].by == uid());
+        }
+        // Người lập hồ sơ không được tự tạo trạng thái "đã duyệt / từ chối / trả về" hay sửa dấu vết của người duyệt:
+        // chỉ được đổi status của bước hiện tại sang waiting/pending; các bước khác giữ nguyên.
+        function submitterStepsOk() {
+          let n = request.resource.data;
+          let o = resource.data;
+          let c = o.currentStep;
+          return n.steps.size() == o.steps.size() && n.requireSchoolLevel == o.requireSchoolLevel
+            && n.steps[c].diff(o.steps[c]).affectedKeys().hasOnly(['status'])
+            && n.steps[c].status in ['waiting', 'pending']
+            && (o.steps.size() < 2 || n.steps[1 - c] == o.steps[1 - c]);
+        }
+        allow read: if isMember(ws);
+        allow create: if ownerOrManagesUnit(ws, request.resource.data.unitId) && validApproval(request.resource.data)
+          && request.resource.data.history.size() == 0
+          && request.resource.data.steps[0].status in ['waiting', 'pending'] && request.resource.data.steps[0].by == null
+          && (request.resource.data.steps.size() < 2 || (request.resource.data.steps[1].status == 'waiting' && request.resource.data.steps[1].by == null))
+          && request.resource.data.status == 'Nháp' && request.resource.data.currentStep == 0
+          && request.resource.data.createdBy == uid() && request.resource.data.createdAt == request.time && stamped();
+        allow update: if validApproval(request.resource.data) && stamped() && unchanged(['createdBy', 'createdAt'])
+          && (
+            // Đơn vị lập kế hoạch: sửa / gửi / gửi lại khi hồ sơ đang ở Nháp hoặc Cần bổ sung. Không tự duyệt.
+            (ownerOrManagesUnit(ws, resource.data.unitId) && ownerOrManagesUnit(ws, request.resource.data.unitId)
+              && resource.data.status in ['Nháp', 'Cần bổ sung']
+              && request.resource.data.status in ['Nháp', 'Cần bổ sung', 'Chờ xử lý']
+              && request.resource.data.currentStep == resource.data.currentStep
+              && submitterStepsOk() && historyAppendOnly())
+            ||
+            // Người duyệt: chỉ đổi trường quy trình, chỉ khi hồ sơ đang chờ, mỗi lần tiến tối đa một bước.
+            (privileged(ws) && resource.data.status == 'Chờ xử lý'
+              && onlyChanged(['steps', 'currentStep', 'status', 'submittedAt', 'history', 'updatedAt', 'updatedBy'])
+              && request.resource.data.status in ['Chờ xử lý', 'Cần bổ sung', 'Đã duyệt', 'Từ chối']
+              && request.resource.data.steps.size() == resource.data.steps.size()
+              && historyAppendOnly()
+              && (request.resource.data.currentStep == resource.data.currentStep
+                  || (request.resource.data.currentStep == resource.data.currentStep + 1 && request.resource.data.status == 'Chờ xử lý'))
+              && (request.resource.data.status != 'Đã duyệt' || request.resource.data.currentStep == request.resource.data.steps.size() - 1))
+          );
+        allow delete: if isOwner(ws) || (managesUnit(ws, resource.data.unitId) && resource.data.status == 'Nháp');
+      }
+
+      // ---------- Chương trình / thông báo từ Trường ----------
+      match /notices/{noticeId} {
+        function validNotice(d) {
+          return d.keys().hasOnly(['title', 'category', 'summary', 'deadline', 'source', 'contact', 'status', 'taskIds', 'createdBy', 'createdAt', 'updatedAt', 'updatedBy'])
+            && str(d.title, 1, 200) && optStr(d.category, 100) && optStr(d.summary, 5000)
+            && optStr(d.source, 300) && optStr(d.contact, 300) && optDate(d.deadline)
+            && d.status in ['Mới tiếp nhận', 'Cần đăng ký', 'Chờ phân công', 'Đã phân công', 'Đã hoàn tất']
+            && d.taskIds is list && d.taskIds.size() <= 50;
+        }
+        allow read: if isMember(ws);
+        allow create: if isManagerOrOwner(ws) && validNotice(request.resource.data)
+          && request.resource.data.createdBy == uid() && request.resource.data.createdAt == request.time && stamped();
+        allow update: if isManagerOrOwner(ws) && validNotice(request.resource.data) && unchanged(['createdBy', 'createdAt']) && stamped();
+        allow delete: if isOwner(ws);
+      }
+
+      // ---------- Kinh phí ----------
+      match /budget/{entryId} {
+        function validEntry(d) {
+          return d.keys().hasOnly(['kind', 'amount', 'source', 'eventId', 'note', 'date', 'evidenceUrl', 'status',
+                                   'decidedBy', 'createdBy', 'createdAt', 'updatedAt', 'updatedBy'])
+            && d.kind in ['thu', 'chi'] && d.amount is int && d.amount > 0 && d.amount <= 100000000000
+            && d.source in ['Quỹ ĐK/LC', 'Khoa hỗ trợ', 'Trường hỗ trợ']
+            && optStr(d.eventId, 100) && str(d.note, 1, 300) && isoDate(d.date)
+            && (d.evidenceUrl == null || httpsUrl(d.evidenceUrl))
+            && d.status in ['Đề xuất', 'Đã duyệt', 'Từ chối'];
+        }
+        allow read: if isMember(ws) && me(ws).role in ['owner', 'approver', 'manager'];
+        allow create: if isManagerOrOwner(ws) && validEntry(request.resource.data)
+          && request.resource.data.status == 'Đề xuất' && request.resource.data.decidedBy == null
+          && request.resource.data.createdBy == uid() && request.resource.data.createdAt == request.time && stamped();
+        allow update: if validEntry(request.resource.data) && stamped() && unchanged(['createdBy', 'createdAt'])
+          && resource.data.status == 'Đề xuất'
+          && (
+            (privileged(ws) && onlyChanged(['status', 'decidedBy', 'updatedAt', 'updatedBy'])
+              && request.resource.data.status in ['Đã duyệt', 'Từ chối'] && request.resource.data.decidedBy == uid())
+            ||
+            (isManagerOrOwner(ws) && resource.data.createdBy == uid() && request.resource.data.status == 'Đề xuất'
+              && unchanged(['decidedBy']))
+          );
+        allow delete: if isOwner(ws) || (isManagerOrOwner(ws) && resource.data.createdBy == uid() && resource.data.status == 'Đề xuất');
+      }
+
+      // ---------- Tài liệu & biểu mẫu (lưu link, không lưu file) ----------
+      match /docs/{docId} {
+        function validDoc(d) {
+          return d.keys().hasOnly(['title', 'group', 'url', 'appliesTo', 'academicYear', 'status', 'createdBy', 'createdAt', 'updatedAt', 'updatedBy'])
+            && str(d.title, 1, 200) && httpsUrl(d.url) && optStr(d.appliesTo, 300) && optStr(d.academicYear, 20)
+            && d.group in ['Biểu mẫu', 'Hướng dẫn', 'Kế hoạch', 'Công văn', 'Biên bản', 'Minh chứng', 'Báo cáo', 'Lưu trữ năm trước']
+            && d.status in ['Đang sử dụng', 'Lưu trữ'];
+        }
+        allow read: if isMember(ws);
+        allow create: if isManagerOrOwner(ws) && validDoc(request.resource.data)
+          && request.resource.data.createdBy == uid() && request.resource.data.createdAt == request.time && stamped();
+        allow update: if isManagerOrOwner(ws) && validDoc(request.resource.data) && unchanged(['createdBy', 'createdAt']) && stamped();
+        allow delete: if isOwner(ws) || (isManagerOrOwner(ws) && resource.data.createdBy == uid());
+      }
+    }
+
+    // Mọi đường dẫn khác: từ chối.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
