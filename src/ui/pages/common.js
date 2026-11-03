@@ -5,7 +5,7 @@ import { S, unitName, firstError, isLoaded } from '../ctx.js';
 
 export function header(title, desc, buttons = '') {
   const s = S();
-  return html`<div class="pagehead"><div><div class="eyebrow">CREW · ${(s.workspace?.name || '').toUpperCase()}</div><h1>${title}</h1><p>${desc}</p></div><div class="actions">${buttons}</div></div>`;
+  return html`<div class="pagehead"><div><div class="eyebrow">${s.workspace?.name || ''}</div><h1>${title}</h1><p>${desc}</p></div><div class="actions">${buttons}</div></div>`;
 }
 
 export function stat(label, val, icon, bg, color, sub) {
@@ -29,7 +29,7 @@ export function taskTable(arr, { showUnit = true } = {}) {
       ) => html`<tr class="clickable" data-task="${t.id}"><td><button class="tasktitle" data-open-task="${t.id}">${t.title}</button><span class="sub">${t.type} · ${taskCode(t.seq)}${t.priority === 'Cao' ? html` · <span class="prio-Cao">Ưu tiên cao</span>` : ''}</span></td>
       ${showUnit ? html`<td>${unitName(t.unitId)}</td>` : ''}
       <td>${t.assigneeName ? html`<span class="assignee">${avatar(t.assigneeName)}${t.assigneeName}</span>` : html`<span class="muted">Chưa phân công</span>`}</td>
-      <td class="${isOverdue(t) ? 'late' : ''}">${fmtDate(t.dueDate)}</td>
+      <td class="nowrap ${isOverdue(t) ? 'late' : ''}">${fmtDate(t.dueDate)}</td>
       <td>${computeProgress(t)}%</td>
       <td>${taskPill(t)}</td></tr>`,
     )}</tbody></table>`;

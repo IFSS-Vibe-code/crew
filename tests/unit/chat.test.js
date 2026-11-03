@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { channelsFor, canChat, validateMessage, isUnread, unreadChannelIds, layoutMessages, linkify, timeLabel, MESSAGE_MAX } from '../../src/domain/chat.js';
 
 const units = [
@@ -66,7 +66,10 @@ describe('chat – bố cục hiển thị', () => {
     { id: '5', authorUid: 'b', text: 'e', createdAt: ts('2026-11-03T09:20:00') },
     { id: '6', authorUid: 'me', text: 'f', createdAt: null }, // đang gửi: xếp cuối
   ];
+  // Tin đang gửi (createdAt null) lấy ngày hiện tại → cố định đồng hồ để bài test không phụ thuộc ngày chạy.
+  vi.useFakeTimers({ now: new Date('2026-11-03T12:00:00'), toFake: ['Date'] });
   const out = layoutMessages(msgs, 'me');
+  vi.useRealTimers();
   it('sắp cũ → mới và chèn mốc ngày', () => {
     expect(out.filter((x) => x.type === 'day').map((x) => x.label)).toEqual(['02/11/2026', '03/11/2026']);
     expect(out.filter((x) => x.type === 'msg').map((x) => x.msg.id)).toEqual(['1', '2', '3', '4', '5', '6']);
