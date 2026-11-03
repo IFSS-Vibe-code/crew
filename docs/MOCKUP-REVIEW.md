@@ -1,38 +1,24 @@
 # Đối chiếu mockup
 
-Mockup (`design/mockup-index.html`) là giao diện tĩnh dữ liệu giả; theo yêu cầu, nó chỉ là **gợi ý**. Bản triển khai giữ bố cục, tên trang, màu sắc và các khối nghiệp vụ của mockup, và nâng cấp theo ClickUp/Asana.
+Mockup `design/mockup-index.html` (demo frontend tĩnh, dữ liệu giả). Theo yêu cầu người dùng, mockup chỉ là **gợi ý**; ứng dụng được thiết kế lại theo thực hành của ClickUp/Asana và khảo sát.
 
-## 1. Trang và thành phần
-
-| Mockup | KhoaFlow | Trạng thái |
+| Mockup | Trạng thái | Ghi chú |
 |---|---|---|
-| Sidebar + chuyển Workspace + tạo Workspace | Có; chuyển/tạo Workspace thật, lời mời | Đáp ứng, mở rộng |
-| Chọn "Xem với vai trò" (mô phỏng) | **Bỏ**; vai trò thật theo tài khoản, kiểm tra ở Rules | Thay thế có chủ đích (mô phỏng không an toàn) |
-| Tổng quan (4 thẻ số, tiến độ theo Ban, hoạt động gần đây, việc cần chú ý, Ban) | Có, số liệu thật | Đáp ứng |
-| Chương trình từ Trường (3 thẻ + 4 bước xử lý) | Có; ghi nhận thủ công, tạo nhiệm vụ liên kết | Đáp ứng; nút "Đồng bộ email" **không** có (cần backend, xem NFR-06) |
-| Công việc (bảng, lọc trạng thái/bộ phận) | Danh sách + Kanban + lọc đa tiêu chí + chi tiết + tự lưu | Đáp ứng, mở rộng |
-| Dự án & Sự kiện (thẻ + luồng 5 bước) | Có; thêm nhân bản năm trước | Đáp ứng, mở rộng |
-| Phê duyệt kế hoạch (bảng, Duyệt/Yêu cầu sửa, các bước, 2–4 tuần) | Có; thêm Từ chối, lịch sử, đếm ngày chờ, cảnh báo | Đáp ứng, mở rộng |
-| Lịch hoạt động (lưới tháng, sắp diễn ra, bộ lọc) | Có; chuyển tháng thật | Đáp ứng |
-| Ban/CLB/Bộ phận | Có; tạo/sửa/xóa | Đáp ứng |
-| Kinh phí (4 thẻ, cơ cấu nguồn, nguyên tắc) | Có; sổ thu chi thật, duyệt | Đáp ứng |
-| Tài liệu & biểu mẫu | Có; **link** thay vì tải file | Đáp ứng một phần (giới hạn Spark) |
-| Báo cáo | Có; tính từ dữ liệu thật; xuất CSV | Đáp ứng |
-| Thành viên & phân quyền (ma trận vai trò) | Có; mời, đổi quyền, thu hồi | Đáp ứng |
-| Cài đặt Workspace | Có; lưu thật | Đáp ứng |
-| Trung tâm hỗ trợ (liên kết minh họa) | Không có (không có nội dung thật) | Không áp dụng |
-| Chuông thông báo (mô phỏng) | Thông báo trong ứng dụng thật | Đáp ứng |
+| Sidebar + 12 mục, Workspace switcher, vai trò | **Đã đáp ứng** | Vai trò nay là dữ liệu thật + Rules, không phải ô chọn demo |
+| Tổng quan (4 chỉ số, tiến độ theo Ban, hoạt động, việc cần chú ý) | Đã đáp ứng | Số liệu từ Firestore |
+| Chương trình từ Trường (3 thẻ, "Tạo nhiệm vụ") | Đã đáp ứng | Nhập tay; **chưa đọc email tự động** |
+| Công việc (bảng, lọc, tạo) | Đã đáp ứng + mở rộng | Thêm Kanban, chi tiết, checklist, minh chứng, bình luận, CSV |
+| Dự án & Sự kiện + luồng 5 bước | Đã đáp ứng | Thêm nhân bản năm trước |
+| Phê duyệt (Duyệt/Yêu cầu sửa, 2–4 tuần) | Đã đáp ứng | Đếm ngày chờ thật; "2–4 tuần" là khảo sát, không phải cam kết |
+| Lịch tháng | Đã đáp ứng | Tháng/hôm nay động, bộ lọc hoạt động |
+| Ban/CLB | Đã đáp ứng | CRUD, tiến độ |
+| Kinh phí | Đã đáp ứng | Đề xuất → duyệt; **số liệu mockup chỉ minh hoạ**, bản thật bắt đầu từ 0 |
+| Tài liệu & biểu mẫu | Đã đáp ứng (link) | Không tải file (Spark) |
+| Báo cáo | Đã đáp ứng | + CSV |
+| Thành viên & phân quyền | Đã đáp ứng | Mời qua email, đổi vai trò |
+| Cài đặt (5 công tắc) | Đã đáp ứng | 4 công tắc có tác dụng thật; "tách dữ liệu theo Ban" là hành vi mặc định của Rules |
+| Thông báo (chuông) | Đã đáp ứng | Thông báo trong ứng dụng |
+| Tạo Workspace mới | Đã đáp ứng | Thật, có tạo Ban mặc định |
 
-## 2. Có tương tác nhưng chưa xác định hành vi → cách xử lý
-
-- "Đồng bộ email": cần Gmail/Outlook + backend → **không làm giả**; ghi nhận thủ công.
-- "Xuất báo cáo": triển khai xuất CSV (UTF-8, chống CSV injection).
-- "Tải tài liệu lên": cần Storage → thay bằng lưu link https.
-
-## 3. Dữ liệu/công thức chưa rõ
-
-Số liệu kinh phí, danh sách Ban/CLB, số thành viên, lãnh đạo trong mockup là dữ liệu minh họa → **không** đưa vào sản phẩm. Workspace mới chỉ khởi tạo cơ cấu Ban đã nêu trong khảo sát (có thể sửa/xóa), không có công việc/số liệu giả.
-
-## 4. Rủi ro khi triển khai
-
-Xem `docs/SECURITY-REVIEW.md` (đăng ký mở, hạn mức Spark) và `docs/FINAL-REPORT.md` (hạng mục chưa xác minh).
+## Chưa rõ / rủi ro
+Danh sách Ban thực tế, ai duyệt cuối cùng, phạm vi xem giữa các Ban, quy chế chi, email đầu mối — xem `docs/PHAN_TICH_YEU_CAU.md` mục **Cần xác nhận**.
