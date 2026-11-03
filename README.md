@@ -1,10 +1,12 @@
-# KhoaFlow – Quản lý công việc của Khoa
+# Crew – Quản lý công việc của Khoa
 
 Ứng dụng web quản lý **công việc, chương trình/sự kiện, phê duyệt kế hoạch, kinh phí, tài liệu và báo cáo** cho một Khoa (hoặc CLB). Lấy cảm hứng bố cục từ mockup `design/mockup-index.html` và cách tổ chức công việc của ClickUp/Asana (Workspace → Ban → Dự án → Công việc; xem Danh sách/Bảng Kanban/Lịch; phê duyệt; bảng điều khiển).
 
 - **Chi phí 0 đồng:** Firebase **Spark** (Authentication + Cloud Firestore), web tĩnh trên **GitHub Pages**. Không Firebase Hosting, không Cloud Functions, không Billing.
 - **An toàn:** phân quyền ở Firestore Security Rules (mặc định từ chối, có 61 test), xác minh email, CSP, escape mặc định, CI với quyền tối thiểu.
 - **Đồng bộ thật:** realtime nhiều người, tự lưu tiêu đề/mô tả, phát hiện xung đột.
+
+**Trang web:** https://ifss-vibe-code.github.io/crew/ · **Mã nguồn:** https://github.com/IFSS-Vibe-code/crew
 
 Trạng thái triển khai, kết quả kiểm thử và các hạng mục chưa xác minh: xem [docs/FINAL-REPORT.md](docs/FINAL-REPORT.md).
 
@@ -21,7 +23,7 @@ Cần Node.js ≥ 22 và (cho Emulator) Java 21 + Firebase CLI. Xem [docs/SETUP.
 npm ci
 npm run dev                  # kết nối Firebase production (project khoaflow-ifss-2026)
 # hoặc, với Emulator (không đụng dữ liệu thật):
-firebase emulators:start --only auth,firestore --project demo-khoaflow
+firebase emulators:start --only auth,firestore --project demo-crew
 VITE_USE_EMULATORS=true npm run dev
 ```
 

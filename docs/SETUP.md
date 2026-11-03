@@ -12,8 +12,8 @@ firebase use khoaflow-ifss-2026
 
 ## 3. Firebase (đã làm; lặp lại khi dựng project mới)
 ```bash
-firebase projects:create <project-id> --display-name "KhoaFlow"
-firebase apps:create WEB "KhoaFlow Web" --project <project-id>
+firebase projects:create <project-id> --display-name "Crew"
+firebase apps:create WEB "Crew Web" --project <project-id>
 firebase firestore:databases:create "(default)" --location asia-southeast1 --project <project-id>
 firebase deploy --only firestore,auth --project <project-id>   # Rules, Indexes, bật Email/Password
 ```

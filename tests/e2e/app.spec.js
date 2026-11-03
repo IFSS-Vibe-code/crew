@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const PROJECT = 'demo-khoaflow';
+const PROJECT = 'demo-crew';
 const EMU = 'http://127.0.0.1:9099';
 const rnd = () => Math.random().toString(36).slice(2, 8);
 

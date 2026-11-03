@@ -5,7 +5,7 @@ import { runtimeInfo } from '../services/firebase/app.js';
 
 let mode = 'signin';
 
-const brand = html`<div class="brand" style="padding:0"><div class="brandmark">K</div><div><strong translate="no">KhoaFlow</strong><small>WORKSPACE MANAGEMENT</small></div></div>`;
+const brand = html`<div class="brand" style="padding:0"><div class="brandmark">C</div><div><strong translate="no">Crew</strong><small>WORKSPACE MANAGEMENT</small></div></div>`;
 
 export function authScreen() {
   const signup = mode === 'signup';

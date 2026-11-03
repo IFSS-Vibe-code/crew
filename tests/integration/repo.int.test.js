@@ -7,7 +7,7 @@ import * as repo from '../../src/services/repo.js';
 import { newApproval, submit, approve, returnForRevision } from '../../src/domain/approvals.js';
 import { ErrorKind } from '../../src/services/errors.js';
 
-const PROJECT = 'demo-khoaflow';
+const PROJECT = 'demo-crew';
 const PW = 'matkhau123';
 
 async function verifyEmail(uid) {

@@ -10,7 +10,7 @@ let latestUnsubs = [];
 let latestKey = '';
 let active = null; // { key, unsub }
 
-const readKey = (ws, uid) => `khoaflow.chatRead.${ws}.${uid}`;
+const readKey = (ws, uid) => `crew.chatRead.${ws}.${uid}`;
 
 function loadRead(ws, uid) {
   try {
