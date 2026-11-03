@@ -4,8 +4,8 @@ Ngày: 2026-11-03. Ký hiệu: **ĐX** = Đã xác minh (có bằng chứng) · 
 
 ## 1. Tổng quan
 Ứng dụng web quản lý công việc của Khoa, dựng từ mockup (chỉ là gợi ý) + khảo sát `docs/PHAN_TICH_YEU_CAU.md`, tham khảo cách tổ chức của ClickUp/Asana. Stack: Vite + JavaScript, Firebase Auth + Firestore (Spark), GitHub Pages.
-- Mã nguồn: https://github.com/IFSS-Vibe-code/crew (public, Organization `IFSS-Vibe-code`; chuyển từ `Hsthanh1612/khoaflow` ngày 04/11/2026) — **ĐX**
-- Trang chạy: https://ifss-vibe-code.github.io/crew/ — **ĐX** (HTTP 200, không lỗi console, đăng nhập sai báo lỗi đúng). Link cũ `hsthanh1612.github.io/khoaflow/` không còn hoạt động.
+- Mã nguồn: https://github.com/T-Vcode/crew (public, Organization `T-Vcode` (tên cũ `IFSS-Vibe-code`); chuyển từ `Hsthanh1612/khoaflow` ngày 04/11/2026) — **ĐX**
+- Trang chạy: https://t-vcode.github.io/crew/ — **ĐX** (HTTP 200, không lỗi console, đăng nhập sai báo lỗi đúng). Các link cũ `hsthanh1612.github.io/khoaflow/` và `ifss-vibe-code.github.io/crew/` không còn hoạt động.
 
 ## 2. Chức năng đã hoàn thành — ĐX bằng test/E2E trên Emulator
 Đăng ký + xác minh email; Workspace nhiều tổ chức + lời mời; 5 vai trò theo Ban; Ban; công việc (Danh sách + Kanban, checklist, minh chứng, bình luận, lịch sử, tự lưu, CSV); chương trình + nhân bản năm trước; hộp thông báo từ Trường; phê duyệt 2 cấp; "chuẩn bị có điều kiện"; kinh phí; tài liệu; lịch; báo cáo; thông báo trong ứng dụng; **trao đổi (chat) theo kênh chung và kênh Ban** (bổ sung 03/11/2026). Chi tiết `docs/REQUIREMENTS.md`, đối chiếu mockup `docs/MOCKUP-REVIEW.md`.
@@ -25,7 +25,7 @@ Ngày: 2026-11-03. Ký hiệu: **ĐX** = Đã xác minh (có bằng chứng) · 
 - Billing: `billingEnabled: false` (kiểm tra qua Cloud Billing API, 2 lần trong ngày) — **ĐX**. Lưu ý: tài khoản Google của bạn vẫn có quyền liên kết Billing; đó là kỷ luật vận hành, không phải khóa kỹ thuật.
 
 ## 7. Authentication, Rules, indexes
-- Email/Password đã bật; miền `ifss-vibe-code.github.io` đã thêm vào Authorized domains (miền cũ `hsthanh1612.github.io` đã gỡ) — **ĐX** (qua API). Luồng email thật trên production — **CX**.
+- Email/Password đã bật; miền `t-vcode.github.io` đã thêm vào Authorized domains (các miền cũ đã gỡ) — **ĐX** (qua API). Luồng email thật trên production — **CX**.
 - Rules đã triển khai; nội dung production **trùng từng byte** với file đã kiểm thử (đối chiếu SHA-256) — **ĐX**. 61 test Rules — **ĐX**. Khách chưa đăng nhập đọc/ghi qua REST: 403 — **ĐX**.
 - Index collection-group `invites.email` đã triển khai — **ĐX**; truy vấn lời mời chạy trong test tích hợp (Emulator) — **ĐX**; **trên production chưa thử** — **CX**.
 
