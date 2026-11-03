@@ -79,3 +79,14 @@ describe('niceScale / compactVnd', () => {
     expect(compactVnd(500)).toBe('500');
   });
 });
+
+describe('initials', () => {
+  it('lấy chữ cái đầu của hai từ cuối, bỏ ký tự không phải chữ', async () => {
+    const { initials } = await import('../../src/ui/kit.js');
+    expect(initials('Lê Đình Hạc')).toBe('ĐH');
+    expect(initials('Khoa FinTech (Demo)')).toBe('KF');
+    expect(initials('Crew')).toBe('CR');
+    expect(initials('')).toBe('?');
+    expect(initials('(??)')).toBe('?');
+  });
+});

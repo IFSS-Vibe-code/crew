@@ -1175,7 +1175,9 @@ textarea.input {
 .field.full {
   grid-column: 1 / -1;
 }
-.field .err {
+.field .err,
+.authcard > .err,
+#authErr {
   color: var(--red);
   font-size: 12px;
   margin-top: 4px;
