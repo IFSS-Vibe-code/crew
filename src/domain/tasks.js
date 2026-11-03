@@ -32,8 +32,9 @@ export function taskCode(seq) {
   return Number.isFinite(n) && n > 0 ? `#TK-${String(n).padStart(3, '0')}` : '#TK-…';
 }
 
-/** Tiến độ tính theo checklist nếu có, ngược lại dùng progress nhập tay. */
+/** Việc đã hoàn thành luôn là 100%; còn lại tính theo checklist nếu có, ngược lại dùng progress nhập tay. */
 export function computeProgress(task) {
+  if (task?.status === 'Hoàn thành') return 100;
   const list = task?.checklist || [];
   if (list.length) return Math.round((list.filter((c) => c.done).length / list.length) * 100);
   const p = Number(task?.progress);
