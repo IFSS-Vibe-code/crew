@@ -3,7 +3,7 @@
 /** Kiểu xem công việc được nhớ trên máy (chỉ là tiện ích, không phải dữ liệu nghiệp vụ). */
 function savedView() {
   try {
-    const v = localStorage.getItem('crewwork.taskView');
+    const v = localStorage.getItem('crew.taskView');
     return v === 'board' ? 'board' : 'list';
   } catch {
     return 'list';
@@ -67,7 +67,7 @@ export function setState(patch) {
 export function setUi(patch) {
   if (patch.taskView) {
     try {
-      localStorage.setItem('crewwork.taskView', patch.taskView);
+      localStorage.setItem('crew.taskView', patch.taskView);
     } catch {
       /* bị chặn (chế độ riêng tư): chỉ mất tính năng nhớ kiểu xem */
     }

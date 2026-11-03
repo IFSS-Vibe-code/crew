@@ -1,6 +1,6 @@
 import { defineConfig } from '@playwright/test';
 
-// E2E chạy với Firebase Emulator (project demo-crewwork) – KHÔNG chạm dữ liệu production.
+// E2E chạy với Firebase Emulator (project demo-crew) – KHÔNG chạm dữ liệu production.
 export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 60_000,

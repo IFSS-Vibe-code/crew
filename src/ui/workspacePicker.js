@@ -11,7 +11,7 @@ import { ROLES } from '../domain/constants.js';
 export function pickerScreen() {
   const { memberships, myInvites, user, errors, membershipsReady } = getState();
   return html`<div class="authwrap"><main class="authcard" style="width:min(560px,100%)">
-    <div class="brand" style="padding:0"><div class="brandmark">C</div><div><strong translate="no">CrewWork</strong><small>WORKSPACE MANAGEMENT</small></div></div>
+    <div class="brand" style="padding:0"><div class="brandmark">C</div><div><strong translate="no">Crew</strong><small>WORKSPACE MANAGEMENT</small></div></div>
     <h1>Không gian làm việc</h1>
     <p class="lead">Xin chào <b>${user.displayName || user.email}</b>. Một tài khoản có thể tham gia nhiều Khoa, CLB hoặc tổ chức; mỗi Workspace có dữ liệu và phân quyền riêng.</p>
     ${errors.workspace ? html`<div class="notice error" role="alert">${errors.workspace}</div>` : ''}

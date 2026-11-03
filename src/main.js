@@ -72,7 +72,7 @@ function screen(key, markup, bind) {
 
 function render() {
   const s = getState();
-  if (!s.authReady) return screen('loading', html`<div class="loading" role="status">Đang tải CrewWork…</div>`);
+  if (!s.authReady) return screen('loading', html`<div class="loading" role="status">Đang tải Crew…</div>`);
   if (!s.user)
     return screen('auth', authScreen(), (r) =>
       bindAuth(r, () => {
@@ -87,7 +87,7 @@ function render() {
       autoOpened = true;
       let last = null;
       try {
-        last = localStorage.getItem('crewwork.lastWs');
+        last = localStorage.getItem('crew.lastWs');
       } catch {
         /* localStorage bị chặn: bỏ qua */
       }
@@ -128,7 +128,7 @@ function render() {
     if (location.hash !== '#/overview') location.hash = '#/overview';
   }
   updateShell(root, page);
-  document.title = `${PAGES.find((p) => p.id === page)?.label || 'CrewWork'} – CrewWork`;
+  document.title = `${PAGES.find((p) => p.id === page)?.label || 'Crew'} – Crew`;
   const content = root.querySelector('#content');
   const mod = PAGE_MAP[page];
   const markup = toString(mod.render());
@@ -194,10 +194,10 @@ window.addEventListener('beforeunload', (e) => {
 
 // Lỗi không bắt được: chỉ báo thông điệp chung, không lộ chi tiết kỹ thuật.
 window.addEventListener('unhandledrejection', (e) => {
-  if (import.meta.env.DEV) console.error('[CrewWork] unhandled', e.reason);
+  if (import.meta.env.DEV) console.error('[Crew] unhandled', e.reason);
   toast('Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.', 'error');
 });
 window.addEventListener('error', (e) => {
-  if (import.meta.env.DEV) console.error('[CrewWork] error', e.error || e.message);
+  if (import.meta.env.DEV) console.error('[Crew] error', e.error || e.message);
 });
 export { PAGES };

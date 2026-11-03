@@ -44,7 +44,7 @@ export function shellHtml() {
   const groups = [...new Set(PAGES.map((p) => p.group))];
   return html`<div class="app">
     <aside class="sidebar" id="sidebar" aria-label="Điều hướng chính">
-      <div class="brand"><div class="brandmark">C</div><div><strong translate="no">CrewWork</strong><small>WORKSPACE MANAGEMENT</small></div></div>
+      <div class="brand"><div class="brandmark">C</div><div><strong translate="no">Crew</strong><small>WORKSPACE MANAGEMENT</small></div></div>
       <button class="workspace" id="wsSwitch" title="Chuyển Workspace / tạo tổ chức"><span class="wsicon" id="wsIcon">${initials(wsName)}</span><span class="wstxt"><strong id="wsName">${wsName}</strong><span id="wsType">${s.workspace?.type || ''}</span></span><span aria-hidden="true">⌄</span></button>
       ${groups.map(
         (g) => html`<div class="navlabel">${g}</div><nav class="nav" aria-label="${g}">

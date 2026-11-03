@@ -89,7 +89,7 @@ export function openWorkspace(wsId) {
   stopWorkspace();
   resetWorkspaceData({ wsId });
   try {
-    localStorage.setItem('crewwork.lastWs', wsId);
+    localStorage.setItem('crew.lastWs', wsId);
   } catch {
     /* localStorage không khả dụng (chế độ riêng tư) – bỏ qua, chỉ là tiện ích nhớ lựa chọn */
   }

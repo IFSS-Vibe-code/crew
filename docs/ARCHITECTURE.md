@@ -48,7 +48,7 @@ Firestore ──onSnapshot──▶ sync.js ──▶ store.setState ──▶ m
 ## Môi trường
 | | Dev/Test | Production |
 |---|---|---|
-| Firebase | Emulator, project `demo-crewwork` | `khoaflow-ifss-2026` |
+| Firebase | Emulator, project `demo-crew` | `khoaflow-ifss-2026` |
 | Chọn bằng | `VITE_USE_EMULATORS=true` (chỉ khi chạy `vite` dev) | mặc định |
 | Bảo vệ | build production **ném lỗi** nếu bật Emulator; CSP production không cho phép localhost; `scripts/check-dist.mjs` kiểm tra trong CI | |
 

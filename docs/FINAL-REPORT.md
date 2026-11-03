@@ -1,11 +1,11 @@
-# Báo cáo nghiệm thu – CrewWork
+# Báo cáo nghiệm thu – Crew
 
 Ngày: 2026-11-03. Ký hiệu: **ĐX** = Đã xác minh (có bằng chứng) · **CX** = Chưa xác minh · **BC** = Bị chặn · **KAD** = Không áp dụng.
 
 ## 1. Tổng quan
 Ứng dụng web quản lý công việc của Khoa, dựng từ mockup (chỉ là gợi ý) + khảo sát `docs/PHAN_TICH_YEU_CAU.md`, tham khảo cách tổ chức của ClickUp/Asana. Stack: Vite + JavaScript, Firebase Auth + Firestore (Spark), GitHub Pages.
-- Mã nguồn: https://github.com/crewworkapp/crewworkapp.github.io (public) — **ĐX**
-- Trang chạy: https://crewworkapp.github.io/ — **ĐX** (HTTP 200, không lỗi console, đăng nhập sai báo lỗi đúng)
+- Mã nguồn: https://github.com/Hsthanh1612/khoaflow (public) — **ĐX** · chuyển sang Organization: **CX** (đang thực hiện)
+- Trang chạy: https://hsthanh1612.github.io/khoaflow/ — **ĐX** (HTTP 200, không lỗi console, đăng nhập sai báo lỗi đúng)
 
 ## 2. Chức năng đã hoàn thành — ĐX bằng test/E2E trên Emulator
 Đăng ký + xác minh email; Workspace nhiều tổ chức + lời mời; 5 vai trò theo Ban; Ban; công việc (Danh sách + Kanban, checklist, minh chứng, bình luận, lịch sử, tự lưu, CSV); chương trình + nhân bản năm trước; hộp thông báo từ Trường; phê duyệt 2 cấp; "chuẩn bị có điều kiện"; kinh phí; tài liệu; lịch; báo cáo; thông báo trong ứng dụng; **trao đổi (chat) theo kênh chung và kênh Ban** (bổ sung 03/11/2026). Chi tiết `docs/REQUIREMENTS.md`, đối chiếu mockup `docs/MOCKUP-REVIEW.md`.
