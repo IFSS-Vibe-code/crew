@@ -31,6 +31,14 @@ Firestore ──onSnapshot──▶ sync.js ──▶ store.setState ──▶ m
 - Mốc "đã đọc" lưu ở `localStorage` theo Workspace + người dùng (tiện ích, không phải dữ liệu nghiệp vụ); lần đầu thấy một kênh coi như đã đọc lịch sử cũ.
 - Tin gửi đi chỉ xóa khỏi ô soạn **sau khi máy chủ xác nhận**; trong lúc chờ hiện "Đang gửi…" (theo `hasPendingWrites`).
 
+## Biểu đồ
+
+- Vẽ bằng SVG/HTML thuần trong `src/ui/charts.js` (không thêm thư viện, giữ CSP `script-src 'self'`). Số liệu tính ở `src/domain/insights.js` (hàm thuần, có test).
+- Tổng quan: thanh phân đoạn "Tình trạng công việc" kèm % hoàn thành, cột "Hạn chót sắp tới" theo tuần, thanh ngang tiến độ theo bộ phận. Báo cáo: thêm đường "Nhịp công việc 8 tuần" và khối lượng theo người phụ trách. Kinh phí: thu/chi theo nguồn và chi theo chương trình.
+- Quy tắc theo skill `dataviz`: một trục, hạn chế màu (xanh dương/cam cho hai chuỗi; xanh lá/xanh dương/xám/vàng/đỏ cho trạng thái), màu không chỉ là kênh duy nhất (có legend, % trong khối, tooltip, bảng "Xem dạng bảng"), nhãn dùng màu chữ thường, tooltip dùng `textContent`, hoạt động bằng bàn phím (focus hiện tooltip).
+- Bảng màu trạng thái đã chạy `validate_palette.js` (chế độ sáng, nền trắng). Bốn màu có sắc (xanh lá, xanh dương, vàng, đỏ) đạt dải sáng, ngưỡng CVD ΔE ≥ 8 và ngưỡng nhìn thường ≥ 15 giữa các cặp liền kề. Màu xám `#a3a7b0` cho "Chưa bắt đầu" là màu trung tính có chủ ý nên bị báo FAIL ở ngưỡng độ bão hòa tối thiểu; nó vẫn tách khỏi các màu kề bên (CVD ΔE 16,3). Vàng (2,17:1) và xám (2,41:1) thấp hơn 3:1 so với nền, nên luôn đi kèm legend, nhãn % và bảng dữ liệu. Chế độ "mọi cặp" không đạt (đỏ ↔ xanh lá), vì vậy chỉ dùng bảng màu này cho các khối liền kề và không dùng cho biểu đồ phân tán. Cặp xanh dương/cam dùng cho hai chuỗi đạt toàn bộ ngưỡng.
+- Phông chữ Be Vietnam Pro (`@fontsource`, giấy phép OFL, đóng gói cùng ứng dụng nên không gọi CDN).
+
 ## Đồng bộ và xung đột
 - Ghi nhỏ, theo trường cần đổi; chống bấm đúp bằng khóa nút (`run`).
 - Tạo công việc dùng transaction với bộ đếm (không trùng mã), có thử lại có kiểm soát khi bộ đếm vừa bị người khác tăng.

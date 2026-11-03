@@ -45,10 +45,14 @@ export const pill = (s) => html`<span class="pill ${PILL[s] || 'p-gray'}">${s}</
 export const taskPill = (t) => pill(effectiveStatus(t));
 
 export function initials(name) {
-  const parts = String(name || '?')
+  // Chỉ lấy các từ bắt đầu bằng chữ cái/số: "Khoa FinTech (Demo)" → "KF" thay vì "F(".
+  const parts = String(name || '')
     .trim()
-    .split(/\s+/);
-  return (parts.length > 1 ? parts[parts.length - 2][0] + parts[parts.length - 1][0] : parts[0].slice(0, 2)).toUpperCase();
+    .split(/\s+/)
+    .filter((w) => /^[\p{L}\p{N}]/u.test(w));
+  if (!parts.length) return '?';
+  const first = (w) => [...w][0];
+  return (parts.length > 1 ? first(parts[parts.length - 2]) + first(parts[parts.length - 1]) : [...parts[0]].slice(0, 2).join('')).toUpperCase();
 }
 export const avatar = (name) => html`<span class="miniav" aria-hidden="true">${initials(name)}</span>`;
 

@@ -26,6 +26,10 @@
   --radius: 12px;
   --focus: 0 0 0 3px rgba(60, 98, 216, 0.35);
   --sidebar: 248px;
+  --viz-grid: #e8ebf1;
+  --viz-base: #c9d0dc;
+  --viz-ink: #172033;
+  --viz-muted: #6b7689;
   color-scheme: light;
 }
 * {
@@ -39,6 +43,7 @@ body {
   margin: 0;
   background: var(--bg);
   font-family:
+    'Be Vietnam Pro',
     Inter,
     -apple-system,
     BlinkMacSystemFont,
@@ -400,11 +405,9 @@ a {
   margin-bottom: 20px;
 }
 .eyebrow {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1.3px;
-  color: var(--muted2);
-  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--muted);
+  font-weight: 600;
   margin-bottom: 6px;
 }
 .pagehead h1 {
@@ -1172,7 +1175,9 @@ textarea.input {
 .field.full {
   grid-column: 1 / -1;
 }
-.field .err {
+.field .err,
+.authcard > .err,
+#authErr {
   color: var(--red);
   font-size: 12px;
   margin-top: 4px;
@@ -1801,4 +1806,291 @@ h3,
   .chathint .keyhint {
     display: none;
   }
+}
+
+/* ---------- Làm mới giao diện (Be Vietnam Pro, bề mặt nhẹ hơn) ---------- */
+.panel,
+.stat {
+  box-shadow: 0 1px 2px rgba(24, 45, 82, 0.05);
+}
+.stat {
+  padding: 18px 18px 16px;
+}
+.stat {
+  min-width: 0;
+}
+.stat strong {
+  overflow-wrap: anywhere;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -1.2px;
+  margin: 10px 0 4px;
+}
+.staticon {
+  border-radius: 10px;
+}
+.panelhead {
+  padding: 16px 20px 14px;
+}
+.panelbody {
+  padding: 18px 20px;
+}
+.nav a[aria-current='page'] {
+  box-shadow: inset 3px 0 0 var(--blue);
+}
+.pagehead h1 {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+/* ---------- Biểu đồ ---------- */
+.vizrow {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+}
+.two.even {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.chart .grid {
+  stroke: var(--viz-grid);
+  stroke-width: 1;
+}
+.chart .base {
+  stroke: var(--viz-base);
+  stroke-width: 1;
+}
+.chart .axis {
+  fill: var(--viz-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.chart .val {
+  fill: var(--viz-ink);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.chart .hit {
+  fill: transparent;
+}
+.chart .mark {
+  outline: none;
+}
+.chart .mark:hover .hit,
+.chart .mark:focus-visible .hit {
+  fill: rgba(60, 98, 216, 0.07);
+}
+.chart .cross {
+  stroke: var(--viz-base);
+  stroke-width: 1;
+  opacity: 0;
+}
+.chart .xcol:hover .cross,
+.chart .xcol:focus-visible .cross {
+  opacity: 1;
+}
+.chart .dot {
+  stroke: #fff;
+  stroke-width: 2;
+}
+.vizlegend {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 14px 0 0;
+  padding: 0;
+  font-size: 13px;
+  color: var(--ink2);
+}
+.vizlegend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.vizlegend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex: none;
+}
+.segbar {
+  display: flex;
+  gap: 2px;
+  height: 28px;
+  margin-top: 6px;
+}
+.segbar .seg {
+  display: grid;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  min-width: 6px;
+  outline: none;
+}
+.segbar .seg:hover,
+.segbar .seg:focus-visible {
+  filter: brightness(1.08);
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px var(--ink);
+}
+.hbars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.hrow {
+  display: grid;
+  grid-template-columns: minmax(90px, 160px) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px;
+  margin: 0 -8px;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+}
+.hrow:hover,
+.hrow:focus-visible {
+  background: #f4f6fb;
+}
+.hname {
+  color: var(--ink2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.htrack {
+  height: 12px;
+  display: block;
+  background: #eef1f6;
+  border-radius: 4px;
+}
+.htrack i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+}
+.hrow b {
+  min-width: 44px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+.budgetsrc {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+.bsname {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.bsname b {
+  color: var(--muted);
+  font-weight: 500;
+}
+.viztable {
+  margin-top: 12px;
+  font-size: 13px;
+}
+.viztable summary {
+  cursor: pointer;
+  color: var(--blue-ink);
+  font-weight: 600;
+  width: fit-content;
+}
+.viztable table {
+  margin-top: 8px;
+}
+.viztable th[scope='row'] {
+  font-weight: 600;
+  text-align: left;
+}
+.viztip {
+  position: fixed;
+  z-index: 200;
+  pointer-events: none;
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 9px 12px;
+  box-shadow: var(--shadow);
+  font-size: 12.5px;
+  max-width: 260px;
+}
+.viztip .tt {
+  color: var(--muted);
+}
+.viztip .tv {
+  font-weight: 700;
+  font-size: 14px;
+  margin-top: 2px;
+}
+.viztip .ts {
+  color: var(--muted);
+  margin-top: 1px;
+}
+@media (max-width: 1100px) {
+  .vizrow,
+  .two.even {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 560px) {
+  .stat {
+    padding: 14px;
+  }
+  .stat strong {
+    font-size: 22px;
+    letter-spacing: -0.6px;
+  }
+  .hrow {
+    grid-template-columns: minmax(70px, 110px) minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+  .segbar .seg {
+    padding: 0 4px;
+    font-size: 11.5px;
+  }
+}
+@media print {
+  .viztable[open] summary {
+    display: none;
+  }
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+.hero {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 14px;
+}
+.hero strong {
+  font-size: 48px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -2px;
+}
+.hero span {
+  color: var(--muted);
+  font-size: 13.5px;
 }

@@ -131,6 +131,14 @@ test('Công việc: tạo → xác thực → danh sách/bảng → tự lưu m�
   await page.getByRole('button', { name: /Danh sách/ }).click();
   await page.getByRole('button', { name: 'Hoàn thiện kế hoạch Hội thảo' }).first().click();
   await expect(page.getByPlaceholder('Thêm mô tả…')).toHaveValue('Mô tả được tự lưu');
+  // Biểu đồ Tổng quan: thanh tình trạng + cột hạn chót, có tooltip và bảng thay thế
+  await page.goto('/#/overview');
+  await expect(page.locator('.hero strong')).toHaveText('100%');
+  await expect(page.getByRole('img', { name: /Tình trạng công việc: Hoàn thành 1 \(100%\)/ })).toBeVisible();
+  await page.locator('.segbar .seg').first().hover();
+  await expect(page.locator('.viztip')).toContainText('1 công việc · 100%');
+  await page.locator('.viztable summary').first().click();
+  await expect(page.locator('.viztable table').first()).toBeVisible();
   expect(consoleErrors, consoleErrors.join('\n')).toEqual([]);
   expect(failedRequests).toEqual([]);
 });

@@ -5,6 +5,8 @@ import { taskStatusBreakdown, onTimeRate, avgApprovalDays, workloadByAssignee, t
 import { progressByUnit, taskCode, computeProgress, effectiveStatus } from '../../domain/tasks.js';
 import { downloadText } from '../download.js';
 import { stageLabel } from '../../domain/approvals.js';
+import { statusSegments, weeklyFlow } from '../../domain/insights.js';
+import { segmentedBar, lines, hbars, bindCharts } from '../charts.js';
 
 export const reportsPage = {
   render() {
@@ -22,6 +24,8 @@ export const reportsPage = {
     const avg = avgApprovalDays(s.approvals);
     const prog = progressByUnit(s.tasks, s.units).filter((r) => r.count);
     const load = workloadByAssignee(s.tasks, s.members);
+    const seg = statusSegments(s.tasks);
+    const flow = weeklyFlow(s.tasks);
     return html`${head}
     <div class="grid stats">
       ${stat('Tỷ lệ hoàn thành', `${done.percent}%`, '✓', '#e9f8f5', '#159582', `${done.count}/${b.total} công việc`)}
@@ -29,15 +33,52 @@ export const reportsPage = {
       ${stat('Chương trình', s.events.length, '▦', '#fff5e5', '#bf811c', `${s.events.filter((e) => e.status === 'Hoàn thành').length} đã hoàn thành`)}
       ${stat('Thời gian duyệt TB', avg === null ? '—' : `${avg} ngày`, '⏱', '#f3efff', '#8062c7', `${s.approvals.filter((a) => a.status === 'Đã duyệt').length} hồ sơ đã duyệt`)}
     </div>
-    <div class="grid two"><section class="panel"><div class="panelhead"><h2 style="font-size:14.5px;margin:0">Tiến độ công việc theo trạng thái</h2></div><div class="panelbody">
-      ${b.total ? b.rows.map((x) => html`<div style="margin:13px 0"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>${x.label}</span><b>${x.count} (${x.percent}%)</b></div><div class="bar"><i style="width:${x.percent}%;background:${x.color}"></i></div></div>`) : html`<p class="muted">Chưa có công việc.</p>`}</div></section>
-    <section class="panel"><div class="panelhead"><h2 style="font-size:14.5px;margin:0">Khối lượng theo người phụ trách</h2></div><div class="panelbody">
-      ${load.length ? load.slice(0, 8).map((r) => html`<div class="progressrow"><span class="name">${r.name}</span><div class="bar"><i style="width:${Math.min(100, r.open * 12)}%;background:${r.overdue ? 'var(--red)' : '#5e7be0'}"></i></div><b>${r.open}</b></div>`) : html`<p class="muted">Chưa có việc đang mở được giao.</p>`}
-      <p class="muted" style="font-size:12px;margin:8px 0 0">Số công việc đang mở; thanh đỏ = có việc quá hạn.</p></div></section></div>
-    <section class="panel sectiongap"><div class="panelhead"><h2 style="font-size:14.5px;margin:0">Tiến độ theo bộ phận</h2></div><div class="panelbody">
-      ${prog.length ? prog.map((r) => html`<div class="progressrow"><span class="name">${r.name}</span><div class="bar"><i style="width:${r.percent}%"></i></div><b>${r.percent}%</b></div>`) : html`<p class="muted">Chưa có dữ liệu.</p>`}</div></section>`;
+    <div class="grid two vizrow">
+      <section class="panel"><div class="panelhead"><div><h2>Tình trạng công việc</h2><p>${seg.total} công việc đang theo dõi (không tính việc đã hủy)</p></div></div><div class="panelbody">${segmentedBar(seg.parts, { label: 'Tình trạng công việc', hero: { value: `${seg.parts[0].percent}%`, caption: `đã hoàn thành (${seg.parts[0].count}/${seg.total} công việc)` } })}</div></section>
+      <section class="panel"><div class="panelhead"><div><h2>Nhịp công việc 8 tuần gần nhất</h2><p>Số việc tạo mới so với số việc hoàn thành mỗi tuần</p></div></div><div class="panelbody">
+        ${lines(
+          flow,
+          [
+            { key: 'created', label: 'Tạo mới', color: '#2a78d6' },
+            { key: 'completed', label: 'Hoàn thành', color: '#eb6834' },
+          ],
+          { label: 'Nhịp công việc theo tuần' },
+        )}</div></section>
+    </div>
+    <div class="grid two even">
+      <section class="panel"><div class="panelhead"><div><h2>Tiến độ theo bộ phận</h2><p>Trung bình tiến độ các công việc đang theo dõi</p></div></div><div class="panelbody">
+        ${
+          prog.length
+            ? hbars(
+                prog.map((r) => ({
+                  label: r.name,
+                  value: r.percent,
+                  text: `${r.percent}%`,
+                  tipLines: [`${r.percent}% tiến độ`, `${r.done}/${r.count} việc hoàn thành`],
+                })),
+                { max: 100, label: 'Tiến độ theo bộ phận' },
+              )
+            : html`<p class="muted">Chưa có dữ liệu.</p>`
+        }</div></section>
+      <section class="panel"><div class="panelhead"><div><h2>Khối lượng theo người phụ trách</h2><p>Số công việc đang mở; thanh đỏ = có việc quá hạn</p></div></div><div class="panelbody">
+        ${
+          load.length
+            ? hbars(
+                load.slice(0, 8).map((r) => ({
+                  label: r.name,
+                  value: r.open,
+                  text: String(r.open),
+                  color: r.overdue ? '#d03b3b' : undefined,
+                  tipLines: [`${r.open} việc đang mở`, r.overdue ? `${r.overdue} việc quá hạn` : 'Không có việc quá hạn'],
+                })),
+                { label: 'Khối lượng theo người phụ trách' },
+              )
+            : html`<p class="muted">Chưa có việc đang mở được giao.</p>`
+        }</div></section>
+    </div>`;
   },
   bind(root) {
+    bindCharts(root);
     root.querySelector('#exp')?.addEventListener('click', () => {
       const s = S();
       const rows = [['BÁO CÁO CÔNG VIỆC'], ['Mã', 'Công việc', 'Bộ phận', 'Phụ trách', 'Deadline', 'Trạng thái', 'Tiến độ %']];

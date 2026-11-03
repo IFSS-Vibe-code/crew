@@ -9,6 +9,8 @@ import { fmtDate, todayIso } from '../../domain/dates.js';
 import { safeHref } from '../../lib/html.js';
 import { openForm } from '../formModal.js';
 import * as repo from '../../services/repo.js';
+import { hbars, legend, bindCharts } from '../charts.js';
+import { compactVnd } from '../../domain/insights.js';
 
 function fields() {
   return [
@@ -41,7 +43,7 @@ export const budgetPage = {
     if (g) return html`${head}${g}`;
     const sum = summarizeBudget(s.budget);
     const byEv = budgetByEvent(s.budget, s.events);
-    const max = Math.max(1, ...sum.bySource.map((x) => x.income));
+    const scaleMax = Math.max(1, ...sum.bySource.flatMap((x) => [x.income, x.expense]));
     return html`${head}
     <div class="grid stats">
       ${stat('Tổng thu (đã duyệt)', formatVnd(sum.income), '＋', '#e9f8f5', '#159582', 'Quỹ ĐK/LC, Khoa, Trường')}
@@ -49,10 +51,42 @@ export const budgetPage = {
       ${stat('Số dư', formatVnd(sum.balance), '◇', '#edf2ff', '#4568ce', 'Thu − chi đã duyệt')}
       ${stat('Dự kiến còn', formatVnd(sum.projected), '≈', '#f3efff', '#8062c7', `Sau ${formatVnd(sum.pendingExpense)} chi đang chờ duyệt`)}
     </div>
-    <div class="grid two"><section class="panel"><div class="panelhead"><h2 style="font-size:14.5px;margin:0">Cơ cấu nguồn kinh phí</h2></div><div class="panelbody">
-      ${sum.bySource.map((x) => html`<div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>${x.source}</span><b>${formatVnd(x.balance)}</b></div><div class="bar"><i style="width:${Math.round((x.income / max) * 100)}%;background:#15a18f"></i></div><span class="muted" style="font-size:12px">Thu ${formatVnd(x.income)} · Chi ${formatVnd(x.expense)}</span></div>`)}</div></section>
-    <section class="panel"><div class="panelhead"><h2 style="font-size:14.5px;margin:0">Chi theo chương trình</h2></div><div class="panelbody">
-      ${byEv.length ? byEv.map((r) => html`<div class="feeditem"><div class="feedicon" aria-hidden="true">◇</div><div><strong>${r.title}</strong><p>Chi ${formatVnd(r.expense)} · Thu ${formatVnd(r.income)}</p></div></div>`) : html`<p class="muted">Chưa có khoản nào gắn với chương trình.</p>`}</div></section></div>
+    ${
+      s.budget.some((e) => e.status === 'Đã duyệt')
+        ? html`<div class="grid two even"><section class="panel"><div class="panelhead"><div><h2>Thu và chi theo nguồn</h2><p>Chỉ tính các khoản đã duyệt</p></div></div><div class="panelbody">
+      ${legend([
+        { color: '#2a78d6', label: 'Thu' },
+        { color: '#eb6834', label: 'Chi' },
+      ])}
+      <div class="budgetsrc">${sum.bySource.map(
+        (x) => html`<div class="bsrc"><div class="bsname"><span>${x.source}</span><b>Số dư ${formatVnd(x.balance)}</b></div>
+        ${hbars(
+          [
+            { label: 'Thu', value: x.income, text: compactVnd(x.income), tipLines: [formatVnd(x.income)] },
+            { label: 'Chi', value: x.expense, text: compactVnd(x.expense), color: '#eb6834', tipLines: [formatVnd(x.expense)] },
+          ].map((r) => ({ ...r, tipTitle: `${x.source} – ${r.label}` })),
+          { max: scaleMax, label: `Thu chi nguồn ${x.source}` },
+        )}</div>`,
+      )}</div></div></section>
+    <section class="panel"><div class="panelhead"><div><h2>Chi theo chương trình</h2><p>Khoản chi đã duyệt, cao nhất ở trên</p></div></div><div class="panelbody">
+      ${
+        byEv.length
+          ? hbars(
+              [...byEv]
+                .sort((p, q) => q.expense - p.expense)
+                .map((r) => ({
+                  label: r.title,
+                  value: r.expense,
+                  text: compactVnd(r.expense),
+                  color: '#eb6834',
+                  tipLines: [`Chi ${formatVnd(r.expense)}`, `Thu ${formatVnd(r.income)}`],
+                })),
+              { label: 'Chi theo chương trình' },
+            )
+          : html`<p class="muted">Chưa có khoản nào gắn với chương trình.</p>`
+      }</div></section></div>`
+        : html`<section class="panel sectiongap"><div class="empty"><b>Chưa có khoản đã duyệt để vẽ biểu đồ</b>Biểu đồ thu – chi theo nguồn sẽ xuất hiện khi có khoản đầu tiên được duyệt.</div></section>`
+    }
     <section class="panel sectiongap"><div class="panelhead"><h2 style="font-size:14.5px;margin:0">Sổ thu chi</h2><span class="tag">${s.budget.length} khoản</span></div>
     ${
       s.budget.length
@@ -71,6 +105,7 @@ export const budgetPage = {
     <div class="notice sectiongap">Chỉ khoản <b>đã duyệt</b> được tính vào số dư. Quy chế chi, hạn mức duyệt và quy trình tạm ứng/quyết toán cần khách hàng xác nhận; hệ thống hiện ghi nhận đề xuất → duyệt/từ chối.</div>`;
   },
   bind(root) {
+    bindCharts(root);
     const get = (id) => S().budget.find((e) => e.id === id);
     root.querySelector('#newEntry')?.addEventListener('click', () =>
       openForm({

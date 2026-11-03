@@ -97,6 +97,8 @@ describe('tasks', () => {
     expect(computeProgress(t({ progress: 140 }))).toBe(100);
     expect(computeProgress(t({ progress: -3 }))).toBe(0);
     expect(computeProgress(t({ progress: 'abc' }))).toBe(0);
+    expect(computeProgress(t({ status: 'Hoàn thành', progress: 0 }))).toBe(100); // việc đã xong luôn 100%
+    expect(computeProgress(t({ status: 'Hoàn thành', checklist: [{ done: false }] }))).toBe(100);
     expect(computeProgress({})).toBe(0);
   });
   it('báo hoàn thành cần minh chứng khi Workspace yêu cầu', () => {

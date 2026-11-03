@@ -1,4 +1,13 @@
+import '@fontsource/be-vietnam-pro/vietnamese-400.css';
+import '@fontsource/be-vietnam-pro/vietnamese-500.css';
+import '@fontsource/be-vietnam-pro/vietnamese-600.css';
+import '@fontsource/be-vietnam-pro/vietnamese-700.css';
+import '@fontsource/be-vietnam-pro/latin-400.css';
+import '@fontsource/be-vietnam-pro/latin-500.css';
+import '@fontsource/be-vietnam-pro/latin-600.css';
+import '@fontsource/be-vietnam-pro/latin-700.css';
 import './styles/main.css';
+import { hideChartTip } from './ui/charts.js';
 import { toString, toast, html } from './ui/kit.js';
 import { getState, setState, setUi, subscribe, resetAll } from './state/store.js';
 import { onAuth } from './services/firebase/auth.js';
@@ -136,6 +145,7 @@ function render() {
     const changedPage = content.dataset.page !== page;
     if (changedPage) PAGE_MAP[content.dataset.page]?.leave?.(); // dọn listener của trang vừa rời
     const scroll = content.parentElement.scrollTop;
+    hideChartTip();
     content.innerHTML = markup;
     content.dataset.page = page;
     lastContentHtml = markup;
