@@ -71,6 +71,6 @@ export function classify(err) {
 /** Ghi log kỹ thuật chỉ ở môi trường dev; không log dữ liệu nhạy cảm. */
 export function logError(context, err) {
   if (import.meta.env?.DEV) {
-    console.error(`[KhoaFlow] ${context}:`, err?.cause || err);
+    console.error(`[CrewWork] ${context}:`, err?.cause || err);
   }
 }

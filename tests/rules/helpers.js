@@ -15,7 +15,7 @@ export async function makeEnv() {
   // Bắt buộc nạp đúng file Rules thật của dự án.
   const rules = readFileSync(new URL('../../firestore.rules', import.meta.url), 'utf8');
   if (!rules.includes('allow read, write: if false')) throw new Error('Rules không phải bản của dự án');
-  return initializeTestEnvironment({ projectId: 'demo-khoaflow', firestore: { rules } });
+  return initializeTestEnvironment({ projectId: 'demo-crewwork', firestore: { rules } });
 }
 
 /** Firestore của một người dùng đã xác minh email. */

@@ -1,6 +1,6 @@
 # Báo cáo kiểm thử
 
-Ngày chạy: 2026-11-03. Môi trường: macOS (Apple Silicon), Node 26.13, Java 21, Firebase CLI 15.34.2, Chrome thật (local), Chromium của Playwright (CI Ubuntu). Mọi test phá hủy chạy trên **Emulator, project `demo-khoaflow`**; không ghi dữ liệu production.
+Ngày chạy: 2026-11-03. Môi trường: macOS (Apple Silicon), Node 26.13, Java 21, Firebase CLI 15.34.2, Chrome thật (local), Chromium của Playwright (CI Ubuntu). Mọi test phá hủy chạy trên **Emulator, project `demo-crewwork`**; không ghi dữ liệu production.
 
 | Cổng | Lệnh | Kết quả |
 |---|---|---|

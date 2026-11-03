@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// KhoaFlow – Firestore Security Rules
+// CrewWork – Firestore Security Rules
 // Nguyên tắc: mặc định từ chối; mọi đường dẫn phải được khai báo quyền rõ ràng.
 // Vai trò lấy từ /workspaces/{ws}/members/{uid} (chỉ Owner sửa được role/unitIds).
 // Xem docs/SECURITY-REVIEW.md và tests/rules/*.test.js.

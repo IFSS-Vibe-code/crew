@@ -1,4 +1,4 @@
-# KhoaFlow – Quản lý công việc của Khoa
+# CrewWork – Quản lý công việc của Khoa
 
 Ứng dụng web quản lý **công việc, chương trình/sự kiện, phê duyệt kế hoạch, kinh phí, tài liệu và báo cáo** cho một Khoa (hoặc CLB). Lấy cảm hứng bố cục từ mockup `design/mockup-index.html` và cách tổ chức công việc của ClickUp/Asana (Workspace → Ban → Dự án → Công việc; xem Danh sách/Bảng Kanban/Lịch; phê duyệt; bảng điều khiển).
 
@@ -21,7 +21,7 @@ Cần Node.js ≥ 22 và (cho Emulator) Java 21 + Firebase CLI. Xem [docs/SETUP.
 npm ci
 npm run dev                  # kết nối Firebase production (project khoaflow-ifss-2026)
 # hoặc, với Emulator (không đụng dữ liệu thật):
-firebase emulators:start --only auth,firestore --project demo-khoaflow
+firebase emulators:start --only auth,firestore --project demo-crewwork
 VITE_USE_EMULATORS=true npm run dev
 ```
 

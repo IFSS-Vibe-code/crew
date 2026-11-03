@@ -16,7 +16,7 @@ for (const k of ['apiKey', 'authDomain', 'projectId', 'appId']) {
   if (!firebaseConfig[k]) throw new AppError(ErrorKind.CONFIG, `Thiếu cấu hình Firebase: ${k}`);
 }
 
-const projectId = useEmulators ? 'demo-khoaflow' : firebaseConfig.projectId;
+const projectId = useEmulators ? 'demo-crewwork' : firebaseConfig.projectId;
 export const app = initializeApp({ ...firebaseConfig, projectId });
 export const auth = getAuth(app);
 // Bộ nhớ đệm trong RAM: không lưu dữ liệu Khoa lâu dài trên máy dùng chung (xem docs/ARCHITECTURE.md).

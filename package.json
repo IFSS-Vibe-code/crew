@@ -1,9 +1,9 @@
 {
-  "name": "khoaflow",
+  "name": "crewwork",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "KhoaFlow – quản lý công việc, chương trình và phê duyệt của Khoa",
+  "description": "CrewWork – quản lý công việc, chương trình và phê duyệt của Khoa",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -11,9 +11,9 @@
     "lint": "eslint .",
     "format:check": "prettier --check \"src/**/*.{js,css}\" \"tests/**/*.js\" \"scripts/*.mjs\" \"*.js\"",
     "test": "vitest run tests/unit",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-khoaflow \"vitest run tests/rules\"",
-    "test:integration": "firebase emulators:exec --only firestore,auth --project demo-khoaflow \"VITE_USE_EMULATORS=true vitest run tests/integration\"",
-    "test:e2e": "firebase emulators:exec --only firestore,auth --project demo-khoaflow \"PW_CHANNEL=chrome playwright test\"",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-crewwork \"vitest run tests/rules\"",
+    "test:integration": "firebase emulators:exec --only firestore,auth --project demo-crewwork \"VITE_USE_EMULATORS=true vitest run tests/integration\"",
+    "test:e2e": "firebase emulators:exec --only firestore,auth --project demo-crewwork \"PW_CHANNEL=chrome playwright test\"",
     "check": "npm run lint && npm run test && npm run build"
   },
   "dependencies": {

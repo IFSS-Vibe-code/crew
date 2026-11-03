@@ -5,7 +5,7 @@ import { S, unitName, firstError, isLoaded } from '../ctx.js';
 
 export function header(title, desc, buttons = '') {
   const s = S();
-  return html`<div class="pagehead"><div><div class="eyebrow">KHOAFLOW · ${(s.workspace?.name || '').toUpperCase()}</div><h1>${title}</h1><p>${desc}</p></div><div class="actions">${buttons}</div></div>`;
+  return html`<div class="pagehead"><div><div class="eyebrow">CREWWORK · ${(s.workspace?.name || '').toUpperCase()}</div><h1>${title}</h1><p>${desc}</p></div><div class="actions">${buttons}</div></div>`;
 }
 
 export function stat(label, val, icon, bg, color, sub) {

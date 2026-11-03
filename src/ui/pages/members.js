@@ -54,7 +54,7 @@ export const membersPage = {
         title: 'Mời thành viên',
         submitLabel: 'Gửi lời mời',
         ok: 'Đã tạo lời mời. Người được mời đăng nhập bằng đúng email này để tham gia.',
-        intro: html`<p class="muted" style="margin-top:0;font-size:13px">Hệ thống không tự gửi email. Hãy báo cho người được mời đăng ký/đăng nhập KhoaFlow bằng <b>đúng email này</b>; lời mời sẽ hiện ra sau khi họ xác minh email.</p>`,
+        intro: html`<p class="muted" style="margin-top:0;font-size:13px">Hệ thống không tự gửi email. Hãy báo cho người được mời đăng ký/đăng nhập CrewWork bằng <b>đúng email này</b>; lời mời sẽ hiện ra sau khi họ xác minh email.</p>`,
         fields: [
           { name: 'email', label: 'Email', type: 'email', required: true, full: true, max: 254 },
           { name: 'displayName', label: 'Tên hiển thị (gợi ý)', full: true, max: 100 },
