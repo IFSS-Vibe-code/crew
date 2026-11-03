@@ -6,7 +6,7 @@
 - **An toàn:** phân quyền ở Firestore Security Rules (mặc định từ chối, có 61 test), xác minh email, CSP, escape mặc định, CI với quyền tối thiểu.
 - **Đồng bộ thật:** realtime nhiều người, tự lưu tiêu đề/mô tả, phát hiện xung đột.
 
-**Trang web:** https://ifss-vibe-code.github.io/crew/ · **Mã nguồn:** https://github.com/IFSS-Vibe-code/crew
+**Trang web:** https://t-vcode.github.io/crew/ · **Mã nguồn:** https://github.com/T-Vcode/crew
 
 Trạng thái triển khai, kết quả kiểm thử và các hạng mục chưa xác minh: xem [docs/FINAL-REPORT.md](docs/FINAL-REPORT.md).
 
