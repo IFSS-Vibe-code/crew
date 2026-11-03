@@ -25,6 +25,12 @@ Firestore ──onSnapshot──▶ sync.js ──▶ store.setState ──▶ m
 - Dữ liệu người trước bị xóa sạch khi đổi tài khoản (`resetWorkspaceData`, `resetAll`); bộ nhớ đệm Firestore chỉ trong RAM (`memoryLocalCache`) nên không lưu dữ liệu Khoa lâu dài trên máy dùng chung. Hệ quả: **không dùng offline** – mất mạng thì hiện cảnh báo và thao tác ghi không được xác nhận.
 - Chỉ báo "Đã đồng bộ/Đang lưu…/Mất kết nối" lấy từ `snapshot.metadata` và số thao tác đang chờ.
 
+## Trao đổi (chat)
+- `services/chatSync.js`: 1 listener "tin mới nhất" (`limit 1`) cho mỗi kênh tôi tham gia → chấm chưa đọc; dựng lại khi vai trò/Ban của tôi hoặc danh sách Ban đổi. Kênh đang mở: 100 tin gần nhất (tải thêm 100/lần), **chỉ sống khi đang ở trang Trao đổi** (`leave()` hủy khi rời trang); `stopWorkspace` hủy tất cả.
+- `ui/pages/chat.js`: markup khung trang chỉ phụ thuộc danh sách kênh, nên `main.js` không dựng lại khi có tin mới (giữ nguyên nội dung đang gõ); danh sách tin nhắn được cập nhật riêng qua `subscribe()`, giữ vị trí cuộn, chỉ tự cuộn xuống khi đang ở cuối.
+- Mốc "đã đọc" lưu ở `localStorage` theo Workspace + người dùng (tiện ích, không phải dữ liệu nghiệp vụ); lần đầu thấy một kênh coi như đã đọc lịch sử cũ.
+- Tin gửi đi chỉ xóa khỏi ô soạn **sau khi máy chủ xác nhận**; trong lúc chờ hiện "Đang gửi…" (theo `hasPendingWrites`).
+
 ## Đồng bộ và xung đột
 - Ghi nhỏ, theo trường cần đổi; chống bấm đúp bằng khóa nút (`run`).
 - Tạo công việc dùng transaction với bộ đếm (không trùng mã), có thử lại có kiểm soát khi bộ đếm vừa bị người khác tăng.

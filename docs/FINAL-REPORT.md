@@ -8,7 +8,7 @@ Ngày: 2026-11-03. Ký hiệu: **ĐX** = Đã xác minh (có bằng chứng) · 
 - Trang chạy: https://hsthanh1612.github.io/khoaflow/ — **ĐX** (HTTP 200, không lỗi console, đăng nhập sai báo lỗi đúng)
 
 ## 2. Chức năng đã hoàn thành — ĐX bằng test/E2E trên Emulator
-Đăng ký + xác minh email; Workspace nhiều tổ chức + lời mời; 5 vai trò theo Ban; Ban; công việc (Danh sách + Kanban, checklist, minh chứng, bình luận, lịch sử, tự lưu, CSV); chương trình + nhân bản năm trước; hộp thông báo từ Trường; phê duyệt 2 cấp; "chuẩn bị có điều kiện"; kinh phí; tài liệu; lịch; báo cáo; thông báo trong ứng dụng. Chi tiết `docs/REQUIREMENTS.md`, đối chiếu mockup `docs/MOCKUP-REVIEW.md`.
+Đăng ký + xác minh email; Workspace nhiều tổ chức + lời mời; 5 vai trò theo Ban; Ban; công việc (Danh sách + Kanban, checklist, minh chứng, bình luận, lịch sử, tự lưu, CSV); chương trình + nhân bản năm trước; hộp thông báo từ Trường; phê duyệt 2 cấp; "chuẩn bị có điều kiện"; kinh phí; tài liệu; lịch; báo cáo; thông báo trong ứng dụng; **trao đổi (chat) theo kênh chung và kênh Ban** (bổ sung 03/11/2026). Chi tiết `docs/REQUIREMENTS.md`, đối chiếu mockup `docs/MOCKUP-REVIEW.md`.
 
 ## 3. Tài liệu nguồn đã kiểm tra
 `Master_prompt.txt`, `index.html` (mockup, lưu ở `design/`), `PHAN_TICH_YEU_CAU.md`. Trong `BÀN GIAO/` có 2 SRS dạng PDF và 1 slide (`SRS-Nguoi-dung.pdf`, `SRS-Nha-phat-trien.pdf`, `SRS_Quy_trinh_Vibe-coding.pdf`, `presentation_vibe_coding_with_firebase_and_git.pptx`): **CX – tôi chưa đọc nội dung các file này** (có thể là tài liệu của ứng dụng Financial Plan khác). ClickUp/Asana: dùng kiến thức sẵn có, **không** truy cập trang của họ.
@@ -26,7 +26,7 @@ Ngày: 2026-11-03. Ký hiệu: **ĐX** = Đã xác minh (có bằng chứng) · 
 
 ## 7. Authentication, Rules, indexes
 - Email/Password đã bật; miền `hsthanh1612.github.io` đã thêm vào Authorized domains — **ĐX** (qua API). Luồng email thật trên production — **CX**.
-- Rules đã triển khai; nội dung production **trùng từng byte** với file đã kiểm thử (đối chiếu SHA-256) — **ĐX**. 50 test Rules — **ĐX**. Khách chưa đăng nhập đọc/ghi qua REST: 403 — **ĐX**.
+- Rules đã triển khai; nội dung production **trùng từng byte** với file đã kiểm thử (đối chiếu SHA-256) — **ĐX**. 61 test Rules — **ĐX**. Khách chưa đăng nhập đọc/ghi qua REST: 403 — **ĐX**.
 - Index collection-group `invites.email` đã triển khai — **ĐX**; truy vấn lời mời chạy trong test tích hợp (Emulator) — **ĐX**; **trên production chưa thử** — **CX**.
 
 ## 8. Khởi tạo plan / dữ liệu ban đầu
@@ -36,10 +36,10 @@ Ngày: 2026-11-03. Ký hiệu: **ĐX** = Đã xác minh (có bằng chứng) · 
 Realtime `onSnapshot`, tự lưu tiêu đề/mô tả (debounce 900 ms), transaction cho mã #TK và duyệt hồ sơ, phát hiện xung đột, chỉ báo đồng bộ, hủy listener khi đổi tài khoản/Workspace — **ĐX** (tích hợp + E2E hai trình duyệt). **Không hỗ trợ offline** (cố ý, vì thiết bị dùng chung). Chống ghi trùng khi reload — **ĐX**.
 
 ## 10. Kiểm thử code/hệ thống
-Lint, format, 34 unit, 9 tích hợp, 5 E2E, build, audit 0, secret scan — **ĐX**. CI GitHub (verify→build→deploy) thành công — **ĐX**. Chi tiết và giới hạn: `docs/TEST-REPORT.md`.
+Lint, format, 49 unit, 10 tích hợp, 5 E2E, build, audit 0, secret scan — **ĐX**. CI GitHub (verify→build→deploy) thành công — **ĐX**. Chi tiết và giới hạn: `docs/TEST-REPORT.md`.
 
 ## 11. Bảo mật Firestore
-50 test Rules (ĐX). Rà soát bảo mật đã tìm và sửa 2 lỗ hổng Rules, 1 lỗi escape, 2 lỗ hổng dependency (do tôi tự rà soát, không có đánh giá độc lập) — `docs/SECURITY-REVIEW.md`.
+61 test Rules (ĐX). Rà soát bảo mật đã tìm và sửa 2 lỗ hổng Rules, 1 lỗi escape, 2 lỗ hổng dependency (do tôi tự rà soát, không có đánh giá độc lập) — `docs/SECURITY-REVIEW.md`.
 
 ## 12. GitHub & CI/CD
 Secret scanning + push protection, Dependabot, private vulnerability reporting, token workflow chỉ đọc, ruleset `main` — **ĐX** (qua API). Actions pin SHA, quyền tối thiểu, không secret — **ĐX** (đọc workflow + chạy thật). Ruleset cho admin bỏ qua; hiệu lực ruleset **CX** (chưa thử đẩy vi phạm).
@@ -57,6 +57,9 @@ Xem mục 6. Không nâng Blaze, không liên kết Billing — **ĐX**.
 - Frame-buster chưa có test; hai PR Dependabot chưa xem xét.
 - Giao diện chưa dùng thư viện Lucian UX/UI (skill đã cài nhưng không dùng).
 
+## 15b. Giới hạn của chat
+Chưa có nhắn riêng 1–1, sửa tin, đính kèm, @nhắc tên, thông báo đẩy; không giới hạn tốc độ gửi; chấm chưa đọc chỉ lưu trên từng trình duyệt; chưa thử với bộ gõ Telex/VNI thật — **CX**.
+
 ## 16. Việc cần bạn làm
 1. Mở trang production, tạo tài khoản **Owner** thật bằng email của bạn, kiểm tra thư xác minh và liên kết có quay về đúng trang không; tạo Workspace đầu tiên.
 2. Xác nhận với khách hàng các mục "Cần xác nhận" (danh sách Ban, ai duyệt cuối cùng, phạm vi xem giữa các Ban, quy chế chi, email đầu mối).
@@ -66,7 +69,7 @@ Xem mục 6. Không nâng Blaze, không liên kết Billing — **ĐX**.
 
 ## 17. Giới hạn vận hành
 - Spark: Firestore 50.000 lượt đọc / 20.000 ghi / 20.000 xóa mỗi ngày, 1 GiB (số công bố tại thời điểm viết prompt; **chưa kiểm tra lại** trang giá hiện hành). Vượt hạn mức dịch vụ có thể bị hạn chế — ứng dụng hiển thị thông báo và **không** tự nâng gói.
-- Mỗi người dùng đang mở Workspace giữ ~10 listener realtime; cần theo dõi lượt đọc khi có nhiều người dùng.
+- Mỗi người dùng đang mở Workspace giữ khoảng 10 listener dữ liệu + 1 listener mỗi kênh chat được tham gia (Owner: 7 với 6 Ban) + 1 listener kênh đang mở; mỗi tin nhắn mới tính 1 lượt đọc cho **mỗi** người đang nghe kênh đó; cần theo dõi lượt đọc khi có nhiều người dùng.
 - Không tải file lên: tài liệu/minh chứng là link https (vd Google Drive); quyền truy cập file do chủ link quản lý.
 - Không sao lưu tự động (cần Billing, bị cấm). Dữ liệu chỉ nằm ở Firestore; nên xuất CSV định kỳ.
 - Không offline; mất mạng thì thao tác không được lưu.

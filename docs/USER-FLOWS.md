@@ -16,5 +16,8 @@ Ghi nhận thông báo (hạn đăng ký, đầu mối) → **Tạo nhiệm vụ
 ## Kinh phí
 Trưởng Ban/Owner ghi nhận khoản (Đề xuất) → Owner/Approver **Duyệt/Từ chối** → số dư chỉ tính khoản đã duyệt.
 
+## Trao đổi
+Mục **Trao đổi** ở sidebar → chọn kênh (Toàn Workspace hoặc Ban của mình) → gõ tin, **Enter** để gửi, **Shift+Enter** để xuống dòng → tin hiện ngay cho mọi người trong kênh. Kênh có tin mới hiện chấm đỏ; sidebar hiện số kênh có tin chưa đọc. Rê chuột vào tin của mình để xóa. Owner gán người vào Ban (trang Thành viên) thì người đó thấy kênh của Ban.
+
 ## Trạng thái giao diện
 Mọi trang có: đang tải, rỗng (kèm gợi ý), lỗi (thông báo dễ hiểu), không đủ quyền (ẩn mục/nút + Rules chặn thật).

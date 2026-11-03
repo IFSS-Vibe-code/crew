@@ -95,5 +95,6 @@ export const LIMITS = Object.freeze({
   unitsPerMember: 10,
   evidence: 20,
   history: 50,
+  message: 2000,
   amount: 100_000_000_000,
 });

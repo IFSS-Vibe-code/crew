@@ -35,6 +35,7 @@ import {
 import { DEFAULT_SETTINGS, DEFAULT_UNITS, TASK_STATUSES } from '../domain/constants.js';
 import { todayIso } from '../domain/dates.js';
 import { DECISION_FIELDS } from '../domain/approvals.js';
+import { validateMessage } from '../domain/chat.js';
 
 const Q_LIMIT = 500; // giới hạn số bản ghi mỗi truy vấn để tiết kiệm hạn mức Spark
 
@@ -52,14 +53,19 @@ async function guard(fn) {
 }
 
 /** Lắng nghe realtime; trả về hàm hủy. onError nhận AppError. */
-export function listen(ref, onData, onError) {
+export function listen(ref, onData, onError, { pendingFlag = false } = {}) {
   return onSnapshot(
     ref,
     { includeMetadataChanges: true },
     (snap) => {
       if ('docs' in snap) {
         onData(
-          snap.docs.map((d) => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) })),
+          snap.docs.map((d) => ({
+            id: d.id,
+            ...d.data({ serverTimestamps: 'estimate' }),
+            // Tin nhắn chưa được máy chủ xác nhận (chỉ dùng cho chat: hiển thị "Đang gửi…").
+            ...(pendingFlag ? { _pending: d.metadata.hasPendingWrites } : {}),
+          })),
           snap.metadata,
         );
       } else {
@@ -84,6 +90,10 @@ export const refs = {
   notices: (ws) => query(col(ws, 'notices'), orderBy('createdAt', 'desc'), limit(Q_LIMIT)),
   budget: (ws) => query(col(ws, 'budget'), orderBy('createdAt', 'desc'), limit(Q_LIMIT)),
   docs: (ws) => query(col(ws, 'docs'), orderBy('createdAt', 'desc'), limit(Q_LIMIT)),
+  /** Tin nhắn mới nhất của một kênh (dùng cho chấm "chưa đọc"). */
+  chatLatest: (ws, chatId) => query(collection(db, 'workspaces', ws, 'chats', chatId, 'messages'), orderBy('createdAt', 'desc'), limit(1)),
+  /** N tin gần nhất của kênh đang mở (tải thêm bằng cách tăng N). */
+  chatMessages: (ws, chatId, n) => query(collection(db, 'workspaces', ws, 'chats', chatId, 'messages'), orderBy('createdAt', 'desc'), limit(n)),
   comments: (ws, taskId) => query(collection(db, 'workspaces', ws, 'tasks', taskId, 'comments'), orderBy('createdAt'), limit(200)),
   activity: (ws, taskId) => query(collection(db, 'workspaces', ws, 'tasks', taskId, 'activity'), orderBy('createdAt', 'desc'), limit(30)),
   /**
@@ -614,3 +624,25 @@ export async function deleteDocument(ws, id) {
 }
 
 export { deleteField };
+
+// ---------------- Trao đổi (chat) ----------------
+
+/** Gửi tin nhắn; chỉ resolve khi máy chủ đã xác nhận. Rules kiểm tra quyền kênh và tên người gửi. */
+export async function sendMessage(ws, actor, chatId, text) {
+  const t = validateMessage(text);
+  return guard(async () => {
+    const b = writeBatch(db);
+    const ref = doc(collection(db, 'workspaces', ws, 'chats', chatId, 'messages'));
+    b.set(ref, { text: t, authorUid: actor.uid, authorName: actor.name, createdAt: serverTimestamp() });
+    await b.commit();
+    return ref.id;
+  });
+}
+
+export async function deleteMessage(ws, chatId, messageId) {
+  return guard(async () => {
+    const b = writeBatch(db);
+    b.delete(doc(db, 'workspaces', ws, 'chats', chatId, 'messages', messageId));
+    await b.commit();
+  });
+}

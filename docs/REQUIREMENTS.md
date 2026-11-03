@@ -19,9 +19,11 @@ Nguồn: `design/mockup-index.html` (mockup – chỉ là gợi ý bố cục/lu
 | F12 | Lịch tháng (Deadline, chương trình, hạn đăng ký) | Khảo sát §9 |
 | F13 | Báo cáo: tiến độ, theo Ban, đúng hạn, thời gian duyệt TB, kinh phí; xuất CSV | Khảo sát §9 |
 | F14 | Thông báo trong ứng dụng (quá hạn/sắp hạn/hồ sơ chờ lâu) | Khảo sát MVP #6 |
+| F16 | **Trao đổi (chat)**: kênh "Toàn Workspace" + kênh riêng mỗi Ban; realtime, chấm chưa đọc, gửi Enter / Shift+Enter, link https, xóa tin (tác giả/Owner), tải tin cũ | Yêu cầu bổ sung của người dùng (03/11/2026) |
 | F15 | Tự lưu tiêu đề/mô tả, đồng bộ realtime, chỉ báo đồng bộ, phát hiện xung đột | Master prompt §14 |
 
 ## Không triển khai (ghi rõ)
+- Chat: chưa có nhắn riêng 1–1, sửa tin, đính kèm file, gõ @nhắc tên, thông báo đẩy/email khi có tin mới, tìm kiếm tin nhắn.
 - Tải file lên (cần Cloud Storage/Billing) → thay bằng link https (vd Google Drive).
 - Tự đọc Gmail/Outlook, gửi email nhắc, app mobile native, SSO trường, sao lưu/khôi phục tự động, AI trích xuất nhiệm vụ → ngoài phạm vi Spark/MVP; **[Cần xác nhận]** nếu khách hàng muốn.
 - Phân công giảng dạy theo khối lượng/định mức: khảo sát không có công thức → chưa làm, tránh bịa.

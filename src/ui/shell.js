@@ -5,12 +5,14 @@ import { ROLES } from '../domain/constants.js';
 import { scopeLabel, can } from '../domain/permissions.js';
 import { isOverdue, isDueSoon } from '../domain/tasks.js';
 import { isWaitingTooLong } from '../domain/approvals.js';
+import { channelsFor, unreadChannelIds } from '../domain/chat.js';
 import * as authSvc from '../services/firebase/auth.js';
 import { openWorkspace, stopWorkspace } from '../services/sync.js';
 import { resetWorkspaceData } from '../state/store.js';
 
 export const PAGES = [
   { id: 'overview', label: 'Tổng quan', ico: '◫', group: 'Không gian làm việc' },
+  { id: 'chat', label: 'Trao đổi', ico: '✆', group: 'Không gian làm việc', count: 'chat' },
   { id: 'inbox', label: 'Chương trình từ Trường', ico: '✉', group: 'Không gian làm việc', count: 'inbox' },
   { id: 'tasks', label: 'Công việc', ico: '☷', group: 'Không gian làm việc' },
   { id: 'events', label: 'Dự án & Sự kiện', ico: '▦', group: 'Không gian làm việc' },
@@ -32,7 +34,8 @@ export function pageAllowed(id, me) {
 function counts(s) {
   const inbox = s.notices.filter((n) => ['Mới tiếp nhận', 'Cần đăng ký', 'Chờ phân công'].includes(n.status)).length;
   const approvals = s.approvals.filter((a) => a.status === 'Chờ xử lý').length;
-  return { inbox, approvals };
+  const chat = s.me && s.user ? unreadChannelIds(channelsFor(s.me, s.units), s.chatLatest, s.chatRead, s.user.uid).length : 0;
+  return { inbox, approvals, chat };
 }
 
 export function shellHtml() {

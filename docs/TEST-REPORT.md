@@ -6,10 +6,10 @@ Ngày chạy: 2026-11-03. Môi trường: macOS (Apple Silicon), Node 26.13, Jav
 |---|---|---|
 | Lint | `npm run lint` | Đạt, 0 lỗi |
 | Định dạng | `npm run format:check` | Đạt |
-| Unit (nghiệp vụ) | `npm test` | **34/34** |
-| Security Rules | `npm run test:rules` | **50/50** |
-| Tích hợp (repo ↔ Auth+Firestore Emulator ↔ Rules thật) | `npm run test:integration` | **9/9** |
-| E2E (Chrome thật, Emulator) | `npm run test:e2e` | **5/5** (chạy liên tiếp 5 lần đều đạt) |
+| Unit (nghiệp vụ) | `npm test` | **49/49** (thêm 15 test chat) |
+| Security Rules | `npm run test:rules` | **61/61** (thêm 11 test chat) |
+| Tích hợp (repo ↔ Auth+Firestore Emulator ↔ Rules thật) | `npm run test:integration` | **10/10** |
+| E2E (Chrome thật, Emulator) | `npm run test:e2e` | **5/5** (lần cập nhật chat: 3 lần chạy liên tiếp đều đạt) |
 | Build | `npm run build` | Đạt (~720 kB JS, 216 kB gzip) |
 | Kiểm tra bản build | `node scripts/check-dist.mjs` | Đạt: đúng projectId, không Emulator/localhost, có CSP |
 | Quét secret | `node scripts/scan-secrets.mjs` | Không phát hiện |
@@ -22,6 +22,11 @@ Ngày chạy: 2026-11-03. Môi trường: macOS (Apple Silicon), Node 26.13, Jav
 - **Tích hợp:** tạo song song không trùng mã #TK, mời/nhận lời mời, phạm vi dữ liệu, duyệt hai cấp và chặn xử lý trùng, tự lưu có phát hiện xung đột.
 - **E2E:** đăng ký → xác minh (qua Emulator) → tạo Workspace → tạo việc (validation, minh chứng chỉ https, bình luận chứa HTML không thực thi) → Kanban → reload dữ liệu còn đúng → chương trình, thông báo, phê duyệt 2 cấp, kinh phí, tài liệu (chặn `javascript:`), lịch, báo cáo → mời thành viên, người ngoài không thấy dữ liệu, thành viên chỉ thấy việc được giao, cập nhật realtime giữa hai trình duyệt, đăng xuất không còn dữ liệu cũ → responsive 375 px không tràn ngang; kiểm tra console error và request thất bại ở mỗi luồng.
 - **Production (sau deploy, không ghi dữ liệu):** trang tải HTTP 200; không lỗi console; không request thất bại; JS có đúng projectId, không có Emulator; đăng nhập sai báo "Email hoặc mật khẩu không đúng."; mobile không tràn ngang; truy cập Firestore REST **không đăng nhập** (đọc và ghi) bị **403**.
+
+## Trao đổi (chat) – đã kiểm
+Unit: kênh theo vai trò, kiểm tra tin (rỗng/sai kiểu/2000/2001 ký tự), chưa đọc, gộp tin theo người/5 phút/ngày, linkify chỉ https. Rules: chưa đăng nhập, chưa xác minh, người ngoài, Ban khác, Approver, Owner, Ban không tồn tại, mạo danh uid/tên, thừa trường, giờ giả, sửa tin, quyền xóa, đường dẫn không khai báo. Tích hợp: gửi/đọc qua repo thật, realtime, chặn kênh Ban, xóa. E2E (hai trình duyệt): Owner thấy 7 kênh, thành viên 1 kênh; HTML hiện như chữ; link `rel=noopener`; chấm chưa đọc realtime và tự tắt khi đọc; Enter/Shift+Enter; **đang gõ dở không mất khi có tin mới**; không thấy nút xóa tin người khác; xóa tin mình đồng bộ sang người kia; tin kênh Ban không lộ cho người ngoài Ban; reload còn lịch sử; đăng xuất không còn tin; mobile 375 px không tràn ngang. Kiểm tra ảnh chụp giao diện desktop + mobile.
+
+**Chưa kiểm:** bộ gõ tiếng Việt thật (Telex/VNI) với phím Enter – mã đã xử lý `isComposing`, nhưng Playwright không mô phỏng được bộ gõ; hiệu năng với hàng nghìn tin; chat trên production với tài khoản thật.
 
 ## Lỗi đã sửa trong quá trình kiểm thử
 `[hidden]` bị CSS ghi đè (mục "Kinh phí" vẫn hiện với Thành viên) · kiểu xem Bảng không được nhớ sau reload · CSP chặn Emulator khi dev · 2 lỗ hổng Rules + 1 lỗi escape + 2 lỗ hổng dependency (xem `SECURITY-REVIEW.md`).

@@ -573,3 +573,84 @@ describe('Kinh phí, tài liệu, thông báo, Ban', () => {
     await assertSucceeds(getDocs(collection(dbAs(env, USERS.member), `workspaces/${WS}/notices`)));
   });
 });
+
+describe('Trao đổi (chat)', () => {
+  const msg = (u, over = {}) => ({ text: 'Xin chào', authorUid: u.uid, authorName: u.role, createdAt: serverTimestamp(), ...over });
+  const path = (chat, id = 'm1') => `workspaces/${WS}/chats/${chat}/messages/${id}`;
+  const outsider = { uid: 'u_out', email: 'out@khoa.test', role: 'outsider', unitIds: [] };
+
+  beforeEach(async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore();
+      await setDoc(doc(db, path('general', 'old')), { text: 'cũ', authorUid: USERS.owner.uid, authorName: 'owner', createdAt: new Date() });
+      await setDoc(doc(db, path('unitA', 'oldA')), { text: 'riêng A', authorUid: USERS.manager.uid, authorName: 'manager', createdAt: new Date() });
+      await setDoc(doc(db, path('unitB', 'oldB')), { text: 'riêng B', authorUid: USERS.lecturer.uid, authorName: 'lecturer', createdAt: new Date() });
+    });
+  });
+
+  it('mọi thành viên đọc và gửi được ở kênh chung', async () => {
+    for (const u of Object.values(USERS)) {
+      await assertSucceeds(getDocs(collection(dbAs(env, u), `workspaces/${WS}/chats/general/messages`)));
+      await assertSucceeds(setDoc(doc(dbAs(env, u), path('general', `m_${u.role}`)), msg(u)));
+    }
+  });
+  it('người ngoài Workspace hoặc chưa xác minh email không đọc/gửi được', async () => {
+    await assertFails(getDocs(collection(dbAs(env, outsider), `workspaces/${WS}/chats/general/messages`)));
+    await assertFails(setDoc(doc(dbAs(env, outsider), path('general')), msg(outsider)));
+    await assertFails(getDocs(collection(dbAs(env, USERS.member, { verified: false }), `workspaces/${WS}/chats/general/messages`)));
+    await assertFails(setDoc(doc(dbAs(env, USERS.member, { verified: false }), path('general')), msg(USERS.member)));
+  });
+  it('chưa đăng nhập bị từ chối', async () => {
+    const anon = env.unauthenticatedContext().firestore();
+    await assertFails(getDocs(collection(anon, `workspaces/${WS}/chats/general/messages`)));
+    await assertFails(setDoc(doc(anon, path('general')), msg(USERS.member)));
+  });
+  it('kênh Ban: chỉ thành viên của Ban đó; thành viên không thuộc Ban bị chặn', async () => {
+    await assertSucceeds(getDocs(collection(dbAs(env, USERS.manager), `workspaces/${WS}/chats/unitA/messages`)));
+    await assertSucceeds(setDoc(doc(dbAs(env, USERS.manager), path('unitA')), msg(USERS.manager)));
+    await assertFails(getDocs(collection(dbAs(env, USERS.manager), `workspaces/${WS}/chats/unitB/messages`)));
+    await assertFails(setDoc(doc(dbAs(env, USERS.manager), path('unitB')), msg(USERS.manager)));
+    await assertFails(getDocs(collection(dbAs(env, USERS.member), `workspaces/${WS}/chats/unitA/messages`)));
+    await assertFails(setDoc(doc(dbAs(env, USERS.member), path('unitA')), msg(USERS.member)));
+    await assertFails(getDocs(collection(dbAs(env, USERS.approver), `workspaces/${WS}/chats/unitA/messages`)));
+    await assertSucceeds(getDocs(collection(dbAs(env, USERS.lecturer), `workspaces/${WS}/chats/unitB/messages`)));
+  });
+  it('Owner xem và gửi được ở mọi kênh Ban', async () => {
+    await assertSucceeds(getDocs(collection(dbAs(env, USERS.owner), `workspaces/${WS}/chats/unitA/messages`)));
+    await assertSucceeds(setDoc(doc(dbAs(env, USERS.owner), path('unitB')), msg(USERS.owner)));
+  });
+  it('không gửi vào kênh của Ban không tồn tại (kể cả Owner)', async () => {
+    await assertFails(setDoc(doc(dbAs(env, USERS.owner), path('khong-co-ban')), msg(USERS.owner)));
+  });
+  it('không mạo danh: authorUid / authorName phải là của chính mình', async () => {
+    const db = dbAs(env, USERS.member);
+    await assertFails(setDoc(doc(db, path('general', 'x1')), msg(USERS.member, { authorUid: USERS.owner.uid })));
+    await assertFails(setDoc(doc(db, path('general', 'x2')), msg(USERS.member, { authorName: 'Lê Đình Hạc' })));
+  });
+  it('kiểm tra cấu trúc: rỗng, quá dài, thừa trường, sai kiểu, giờ giả', async () => {
+    const db = dbAs(env, USERS.member);
+    const u = USERS.member;
+    await assertFails(setDoc(doc(db, path('general', 'y1')), msg(u, { text: '' })));
+    await assertFails(setDoc(doc(db, path('general', 'y2')), msg(u, { text: 'a'.repeat(2001) })));
+    await assertSucceeds(setDoc(doc(db, path('general', 'y3')), msg(u, { text: 'a'.repeat(2000) })));
+    await assertFails(setDoc(doc(db, path('general', 'y4')), { ...msg(u), admin: true }));
+    await assertFails(setDoc(doc(db, path('general', 'y5')), msg(u, { text: 123 })));
+    await assertFails(setDoc(doc(db, path('general', 'y6')), msg(u, { createdAt: new Date('2020-01-01') })));
+  });
+  it('không sửa được tin đã gửi (kể cả của mình hay Owner)', async () => {
+    await assertSucceeds(setDoc(doc(dbAs(env, USERS.member), path('general', 'mine')), msg(USERS.member)));
+    await assertFails(updateDoc(doc(dbAs(env, USERS.member), path('general', 'mine')), { text: 'sửa' }));
+    await assertFails(updateDoc(doc(dbAs(env, USERS.owner), path('general', 'mine')), { text: 'sửa' }));
+  });
+  it('chỉ tác giả hoặc Owner được xóa', async () => {
+    await assertSucceeds(setDoc(doc(dbAs(env, USERS.member), path('general', 'mine')), msg(USERS.member)));
+    await assertFails(deleteDoc(doc(dbAs(env, USERS.lecturer), path('general', 'mine'))));
+    await assertSucceeds(deleteDoc(doc(dbAs(env, USERS.member), path('general', 'mine'))));
+    await assertSucceeds(deleteDoc(doc(dbAs(env, USERS.owner), path('general', 'old'))));
+    await assertFails(deleteDoc(doc(dbAs(env, USERS.member), path('general', 'old'))));
+  });
+  it('đường dẫn chat không khai báo (ngoài messages) bị từ chối', async () => {
+    await assertFails(setDoc(doc(dbAs(env, USERS.owner), `workspaces/${WS}/chats/general`), { x: 1 }));
+    await assertFails(setDoc(doc(dbAs(env, USERS.owner), `workspaces/${WS}/chats/general/other/o1`), { x: 1 }));
+  });
+});

@@ -29,7 +29,7 @@ async function newUser(email, name) {
 const actorOf = (u) => ({ uid: u.uid, name: u.displayName });
 const uniq = () => Math.random().toString(36).slice(2, 8);
 
-let owner, ws, units, unitIds, ctx;
+let owner, ws, units, unitIds, ctx, memInfo;
 
 beforeAll(async () => {
   expect(runtimeInfo.emulator).toBe(true);
@@ -162,6 +162,7 @@ describe('Mời thành viên và phạm vi dữ liệu', () => {
     await repo.inviteMember(ws, 'Khoa FinTech', actorOf(owner), { email, role: 'member' }, ctx);
     await signOut(auth);
     const mem = await newUser(email, 'Trần Gia Hân');
+    memInfo = { uid: mem.uid, email };
     const invites = await repo.findMyInvites(email);
     expect(invites).toHaveLength(1);
     await repo.acceptInvite(mem, invites[0]);
@@ -184,6 +185,46 @@ describe('Mời thành viên và phạm vi dữ liệu', () => {
     await expect(
       repo.proposeBudget(ws, { uid: mem.uid, name: 'Hân' }, { kind: 'chi', amount: 1000, source: 'Quỹ ĐK/LC', note: 'x', date: '2026-11-01' }),
     ).rejects.toMatchObject({ kind: ErrorKind.PERMISSION });
+    await signOut(auth);
+  });
+
+  it('trao đổi: gửi/đọc kênh chung realtime; kênh Ban theo quyền; không mạo danh; xóa theo quyền', async () => {
+    const { chatMessages } = repo.refs;
+    // Thành viên (chưa thuộc Ban nào) gửi vào kênh chung
+    await signInWithEmailAndPassword(auth, memInfo.email, PW);
+    const memActor = { uid: memInfo.uid, name: 'Trần Gia Hân' };
+    const id1 = await repo.sendMessage(ws, memActor, 'general', '  Chào cả nhà  ');
+    const got = (await getDocs(chatMessages(ws, 'general', 10))).docs.map((d) => ({ id: d.id, ...d.data() }));
+    expect(got.find((m) => m.id === id1)).toMatchObject({ text: 'Chào cả nhà', authorUid: memInfo.uid, authorName: 'Trần Gia Hân' });
+    // Không vào được kênh Ban khi chưa được gán
+    await expect(repo.sendMessage(ws, memActor, unitIds[0], 'xin vào')).rejects.toMatchObject({ kind: ErrorKind.PERMISSION });
+    await expect(getDocs(chatMessages(ws, unitIds[0], 10))).rejects.toMatchObject({ code: 'permission-denied' });
+    // Mạo danh tên hiển thị bị Rules chặn; tin rỗng bị chặn trước khi ghi
+    await expect(repo.sendMessage(ws, { uid: memInfo.uid, name: 'Lê Đình Hạc' }, 'general', 'giả')).rejects.toMatchObject({ kind: ErrorKind.PERMISSION });
+    await expect(repo.sendMessage(ws, memActor, 'general', '   ')).rejects.toThrow(/trống/);
+    await signOut(auth);
+
+    // Owner: nhận tin realtime ở kênh chung, gửi vào kênh Ban, xóa được tin của người khác
+    await signInWithEmailAndPassword(auth, owner.email, PW);
+    const seen = new Promise((resolve, reject) => {
+      const stop = repo.listen(
+        chatMessages(ws, 'general', 10),
+        (list) => {
+          if (list.some((m) => m.text === 'Đã nhận')) {
+            stop();
+            resolve(list);
+          }
+        },
+        reject,
+        { pendingFlag: true },
+      );
+    });
+    await repo.sendMessage(ws, actorOf(owner), 'general', 'Đã nhận');
+    expect((await seen).map((m) => m.text)).toEqual(expect.arrayContaining(['Chào cả nhà', 'Đã nhận']));
+    await repo.sendMessage(ws, actorOf(owner), unitIds[0], 'Họp Ban lúc 9h');
+    expect((await getDocs(chatMessages(ws, unitIds[0], 10))).size).toBe(1);
+    await repo.deleteMessage(ws, 'general', id1);
+    expect((await getDocs(chatMessages(ws, 'general', 10))).docs.map((d) => d.id)).not.toContain(id1);
     await signOut(auth);
   });
 });

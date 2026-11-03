@@ -258,11 +258,67 @@ test('Mời thành viên: người ngoài không thấy dữ liệu; thành viê
   // Owner thấy cập nhật realtime
   await expect(page.locator('tr', { hasText: 'Việc của Hân' }).locator('.pill')).toHaveText('Đang thực hiện', { timeout: 15_000 });
 
+  // ---- Trao đổi (chat) giữa hai người, realtime ----
+  await p2.keyboard.press('Escape');
+  await page.goto('/#/chat');
+  await expect(page.getByRole('heading', { name: 'Trao đổi' })).toBeVisible();
+  // Owner thấy kênh chung + mọi kênh Ban; Hân (chưa thuộc Ban nào) chỉ thấy kênh chung
+  await expect(page.locator('[data-chat]')).toHaveCount(7);
+  await p2.goto('/#/overview');
+  await expect(p2.getByRole('link', { name: /Trao đổi/ })).toBeVisible();
+  // Owner gửi tin: chuỗi HTML phải hiện như chữ, link https được bấm được
+  const compose = page.getByLabel('Tin nhắn tới Toàn Workspace');
+  await compose.fill('Chào Hân <b>đậm</b> https://drive.google.com/x');
+  await compose.press('Enter');
+  await expect(compose).toHaveValue('');
+  await expect(page.locator('.msg.mine .bubble p').last()).toContainText('Chào Hân <b>đậm</b>');
+  await expect(page.locator('.bubble b')).toHaveCount(0);
+  // Hân thấy chấm "chưa đọc" ở mục Trao đổi mà không cần tải lại
+  await expect(p2.locator('[data-count="chat"]')).toHaveText('1', { timeout: 15_000 });
+  await p2.getByRole('link', { name: /Trao đổi/ }).click();
+  await expect(p2.locator('[data-chat]')).toHaveCount(1);
+  await expect(p2.getByText('Chào Hân <b>đậm</b>')).toBeVisible();
+  await expect(p2.getByRole('link', { name: 'https://drive.google.com/x' })).toHaveAttribute('rel', 'noopener noreferrer');
+  await expect(p2.locator('[data-count="chat"]')).toBeHidden(); // đã đọc
+  // Shift+Enter xuống dòng, Enter gửi; tin xuất hiện bên Owner realtime
+  const c2 = p2.getByLabel('Tin nhắn tới Toàn Workspace');
+  await c2.fill('Dạ em');
+  await c2.press('Shift+Enter');
+  await c2.pressSequentially('đã nhận');
+  await expect(c2).toHaveValue('Dạ em\nđã nhận');
+  await c2.press('Enter');
+  await expect(page.locator('.msg:not(.mine) .bubble p').last()).toHaveText('Dạ em\nđã nhận', { timeout: 15_000 });
+  // Đang gõ dở thì có tin mới đến: nội dung đang gõ không bị mất
+  await c2.fill('đang soạn dở');
+  await compose.fill('Tin thứ hai');
+  await compose.press('Enter');
+  await expect(p2.getByText('Tin thứ hai')).toBeVisible({ timeout: 15_000 });
+  await expect(c2).toHaveValue('đang soạn dở');
+  // Hân không xóa được tin của Owner (không có nút); xóa được tin của mình
+  await expect(p2.locator('.msg:not(.mine) [data-del-msg]')).toHaveCount(0);
+  await p2.locator('.msg.mine .bubble').last().hover();
+  await p2.locator('.msg.mine [data-del-msg]').last().click();
+  await p2.getByRole('button', { name: 'Xóa', exact: true }).click();
+  await expect(page.getByText('Dạ em')).toHaveCount(0, { timeout: 15_000 });
+  // Kênh Ban: Owner gửi vào Ban Sự kiện; Hân không thấy kênh đó và không thấy tin
+  await page.locator('[data-chat]', { hasText: 'Ban Sự kiện' }).click();
+  await page.getByLabel('Tin nhắn tới Ban Sự kiện').fill('Tin nội bộ Ban');
+  await page.getByLabel('Tin nhắn tới Ban Sự kiện').press('Enter');
+  await expect(page.getByText('Tin nội bộ Ban')).toBeVisible();
+  await expect(p2.getByText('Tin nội bộ Ban')).toHaveCount(0);
+  await page.locator('[data-chat]', { hasText: 'Toàn Workspace' }).click();
+  await expect(page.getByText('Tin thứ hai')).toBeVisible();
+  await page.screenshot({ path: 'test-results/shots/chat-desktop.png' });
+  await p2.reload();
+  await expect(p2.getByText('Tin thứ hai')).toBeVisible(); // reload vẫn còn lịch sử
+  await expect(p2.getByText('Tin nội bộ Ban')).toHaveCount(0);
+
   // Đăng xuất rồi đăng nhập tài khoản khác: không còn dữ liệu của người trước
   await p2.keyboard.press('Escape');
   await p2.getByRole('button', { name: 'Đăng xuất' }).click();
   await expect(p2.getByRole('heading', { name: 'Đăng nhập' })).toBeVisible();
   await expect(p2.getByText('Việc của Hân')).toHaveCount(0);
+  await expect(p2.getByText('Tin thứ hai')).toHaveCount(0);
   await ctx2.close();
 });
 
@@ -275,9 +331,10 @@ test('Responsive: không tràn ngang trên điện thoại; menu mở được',
   await p.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
   await p.getByRole('button', { name: /Khoa FinTech/ }).click(); // phiên mới chưa nhớ Workspace gần nhất
   await expect(p.getByRole('heading', { name: 'Tổng quan hoạt động' })).toBeVisible({ timeout: 20_000 });
-  for (const page of ['overview', 'tasks', 'events', 'approvals', 'calendar', 'budget', 'reports']) {
+  for (const page of ['overview', 'chat', 'tasks', 'events', 'approvals', 'calendar', 'budget', 'reports']) {
     await p.goto(`/#/${page}`);
     await p.waitForTimeout(300);
+    if (page === 'chat') await p.screenshot({ path: 'test-results/shots/chat-mobile.png' });
     const overflow = await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow, `tràn ngang ở trang ${page}`).toBeLessThanOrEqual(1);
   }

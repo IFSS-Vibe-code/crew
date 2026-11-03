@@ -3,13 +3,13 @@
 Ứng dụng web quản lý **công việc, chương trình/sự kiện, phê duyệt kế hoạch, kinh phí, tài liệu và báo cáo** cho một Khoa (hoặc CLB). Lấy cảm hứng bố cục từ mockup `design/mockup-index.html` và cách tổ chức công việc của ClickUp/Asana (Workspace → Ban → Dự án → Công việc; xem Danh sách/Bảng Kanban/Lịch; phê duyệt; bảng điều khiển).
 
 - **Chi phí 0 đồng:** Firebase **Spark** (Authentication + Cloud Firestore), web tĩnh trên **GitHub Pages**. Không Firebase Hosting, không Cloud Functions, không Billing.
-- **An toàn:** phân quyền ở Firestore Security Rules (mặc định từ chối, có 50 test), xác minh email, CSP, escape mặc định, CI với quyền tối thiểu.
+- **An toàn:** phân quyền ở Firestore Security Rules (mặc định từ chối, có 61 test), xác minh email, CSP, escape mặc định, CI với quyền tối thiểu.
 - **Đồng bộ thật:** realtime nhiều người, tự lưu tiêu đề/mô tả, phát hiện xung đột.
 
 Trạng thái triển khai, kết quả kiểm thử và các hạng mục chưa xác minh: xem [docs/FINAL-REPORT.md](docs/FINAL-REPORT.md).
 
 ## Chức năng chính
-Đăng ký/xác minh email · nhiều Workspace + lời mời · 5 vai trò (Owner, Approver, Manager, Member, Lecturer) theo Ban · công việc (checklist, minh chứng, bình luận, lịch sử, Danh sách + Kanban kéo thả, lọc, CSV) · chương trình + nhân bản năm trước · hộp thông báo từ Trường · phê duyệt 2 cấp (trả/gửi lại/từ chối, đếm ngày chờ) · kinh phí (đề xuất → duyệt) · tài liệu (link) · lịch · báo cáo · thông báo trong ứng dụng.
+Đăng ký/xác minh email · nhiều Workspace + lời mời · 5 vai trò (Owner, Approver, Manager, Member, Lecturer) theo Ban · công việc (checklist, minh chứng, bình luận, lịch sử, Danh sách + Kanban kéo thả, lọc, CSV) · chương trình + nhân bản năm trước · hộp thông báo từ Trường · phê duyệt 2 cấp (trả/gửi lại/từ chối, đếm ngày chờ) · kinh phí (đề xuất → duyệt) · tài liệu (link) · lịch · báo cáo · thông báo trong ứng dụng · **trao đổi (chat)** theo kênh chung và kênh của từng Ban.
 
 ## Stack
 HTML/CSS/JavaScript (ES modules) + Vite · Firebase Web SDK · Vitest · `@firebase/rules-unit-testing` · Playwright. Chi tiết: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

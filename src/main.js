@@ -19,6 +19,7 @@ import { docsPage } from './ui/pages/docs.js';
 import { reportsPage } from './ui/pages/reports.js';
 import { membersPage } from './ui/pages/members.js';
 import { settingsPage } from './ui/pages/settings.js';
+import { chatPage } from './ui/pages/chat.js';
 
 // GitHub Pages không đặt được header frame-ancestors: chặn nhúng trong iframe của trang khác bằng mã.
 if (window.top !== window.self) {
@@ -33,6 +34,7 @@ if (window.top !== window.self) {
 const root = document.getElementById('root');
 const PAGE_MAP = {
   overview,
+  chat: chatPage,
   tasks: tasksPage,
   events: eventsPage,
   inbox: inboxPage,
@@ -132,6 +134,7 @@ function render() {
   const markup = toString(mod.render());
   if (markup !== lastContentHtml || content.dataset.page !== page) {
     const changedPage = content.dataset.page !== page;
+    if (changedPage) PAGE_MAP[content.dataset.page]?.leave?.(); // dọn listener của trang vừa rời
     const scroll = content.parentElement.scrollTop;
     content.innerHTML = markup;
     content.dataset.page = page;

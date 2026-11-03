@@ -5,6 +5,7 @@
 import { listen, refs, forgetMembership, findMyInvites } from './repo.js';
 import { getState, setState, resetWorkspaceData } from '../state/store.js';
 import { ErrorKind, logError } from './errors.js';
+import { syncChatLatest, stopChat } from './chatSync.js';
 
 let userUnsubs = [];
 let wsUnsubs = [];
@@ -79,6 +80,7 @@ export function stopWorkspace() {
   wsUnsubs = stopAll(wsUnsubs);
   taskUnsubs = stopAll(taskUnsubs);
   taskScopeKey = '';
+  stopChat();
   meta.clear();
 }
 
@@ -106,6 +108,7 @@ export function openWorkspace(wsId) {
         setState((s) => ({ me, loaded: { ...s.loaded, me: true } }));
         if (first) startWorkspaceListeners(wsId, me);
         restartTasksIfScopeChanged(wsId, me);
+        syncChatLatest();
       },
       (err) => {
         onErr('me')(err);
@@ -129,6 +132,7 @@ function startWorkspaceListeners(wsId, me) {
         (data, m) => {
           setMeta(key, m);
           setState((s) => ({ [key]: mapFn(data), loaded: { ...s.loaded, [key]: true }, errors: { ...s.errors, [key]: undefined } }));
+          if (key === 'units') syncChatLatest();
         },
         onErr(key),
       ),

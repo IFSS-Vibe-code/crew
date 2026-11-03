@@ -14,6 +14,7 @@ workspaces/{wsId}                     {name, type, academicYear, contactEmail, o
                                        startDate, dueDate, eventId, progress, checklist[], evidence[], seq, completedOn, created*/updated*}
     comments/{id}                     {text, authorUid, authorName, createdAt}                  # chỉ tạo/xóa, không sửa
     activity/{id}                     {action, detail, actorUid, actorName, createdAt}          # chỉ tạo
+  chats/{chatId}/messages/{id}       {text(1–2000), authorUid, authorName, createdAt}            # chatId = 'general' | id của Ban; chỉ tạo/xóa
   events/{id}                         {title, description, type, status, unitId, date, location, created*/updated*}
   approvals/{id}                      {title, unitId, eventId, note, requireSchoolLevel, steps[], currentStep, status, submittedAt, history[], ...}
   notices/{id}                        {title, category, summary, deadline, source, contact, status, taskIds[], ...}
@@ -26,6 +27,8 @@ workspaces/{wsId}                     {name, type, academicYear, contactEmail, o
 |---|---|---|
 | Workspace, members, units, events, approvals, notices, docs | Mọi thành viên | Theo vai trò (Owner mọi nơi; Manager trong Ban của mình; Approver duyệt) |
 | tasks | Owner/Approver: tất cả; người khác: việc thuộc Ban của mình, được giao hoặc phối hợp | Owner/Manager sửa đủ; người được giao chỉ `status, progress, checklist, evidence, completedOn` |
+| chats/general | Mọi thành viên | Mọi thành viên gửi (đúng uid + tên hiển thị của mình); xóa: tác giả hoặc Owner; không sửa |
+| chats/{unitId} | Thành viên được gán Ban đó + Owner | Như trên; Ban phải còn tồn tại |
 | budget | Owner, Approver, Manager | Manager/Owner đề xuất; Owner/Approver duyệt |
 | members.role/unitIds | Thành viên | **Chỉ Owner** (không tự nâng quyền); không hạ chủ gốc |
 

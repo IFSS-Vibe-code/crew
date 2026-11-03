@@ -30,6 +30,13 @@ Các lỗ hổng #1–#2 là lỗi **do tôi tạo ra ở bản Rules đầu** v
 - **GitHub Actions:** `permissions: contents: read` mặc định, chỉ job deploy có `pages/id-token: write`; tất cả Actions pin theo **full SHA**; không `pull_request_target`; không dùng `${{ github.event.* }}` trong lệnh shell; `persist-credentials: false`; `concurrency`; deploy chỉ từ `main` sau khi verify đạt; **không có secret nào**.
 - **Repo:** secret scanning + push protection, Dependabot alerts + updates, private vulnerability reporting, token workflow mặc định chỉ đọc, ruleset `main` (chặn xóa, chặn force-push, bắt buộc check `verify`).
 
+## Trao đổi (chat) – bổ sung 03/11/2026
+- Quyền kênh do **Rules** cưỡng chế (không chỉ ẩn ở giao diện): kênh chung cho thành viên đã xác minh; kênh Ban chỉ cho thành viên được gán Ban + Owner; Approver **không** tự động đọc kênh Ban.
+- Chống mạo danh: `authorUid == uid` và `authorName ==` tên hiển thị trong hồ sơ thành viên; `createdAt == request.time`; `hasOnly` 4 trường; 1–2000 ký tự; không sửa tin; xóa: tác giả hoặc Owner.
+- XSS: nội dung luôn escape; chỉ tự tạo liên kết cho `https://` (qua `safeHref`, `rel="noopener noreferrer"`); E2E gửi chuỗi `<b>` và kiểm tra không thành thẻ HTML.
+- 11 test Rules + 1 test tích hợp + luồng E2E hai trình duyệt.
+- Giới hạn: **không có giới hạn tốc độ gửi** (Rules không đếm được theo thời gian) → một thành viên có thể spam và tiêu hạn mức ghi Spark; cách xử lý hiện tại là Owner xóa tin/xóa thành viên. Tin nhắn **không mã hóa đầu-cuối** (Google lưu dạng thường như mọi dữ liệu Firestore). Chấm "chưa đọc" lưu trên trình duyệt (localStorage), không đồng bộ giữa các máy.
+
 ## Rủi ro còn lại / giới hạn
 1. Ruleset `main` cho phép **admin repo bỏ qua** (1 người quản trị, không có người review thứ hai); không yêu cầu PR review.
 2. Repo **public** (theo lựa chọn của người dùng, để dùng Pages miễn phí): mã nguồn công khai; bảo mật dựa vào Rules, không dựa vào việc giấu mã.

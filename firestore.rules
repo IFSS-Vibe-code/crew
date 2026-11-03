@@ -149,6 +149,23 @@ service cloud.firestore {
         allow delete: if isOwner(ws);
       }
 
+      // ---------- Trao đổi (chat): 'general' cho mọi thành viên; kênh Ban cho thành viên của Ban (Owner thấy tất cả) ----------
+      match /chats/{chatId}/messages/{messageId} {
+        function canChat() {
+          return isMember(ws) && (chatId == 'general' || isOwner(ws) || chatId in me(ws).unitIds);
+        }
+        function validMessage(d) {
+          return d.keys().hasOnly(['text', 'authorUid', 'authorName', 'createdAt'])
+            && str(d.text, 1, 2000) && d.authorUid == uid()
+            && d.authorName == me(ws).displayName && d.createdAt == request.time;
+        }
+        allow read: if canChat();
+        // Kênh Ban chỉ mở khi Ban còn tồn tại; không sửa tin đã gửi (chỉ gửi mới / xóa).
+        allow create: if canChat() && (chatId == 'general' || unitExists(ws, chatId)) && validMessage(request.resource.data);
+        allow update: if false;
+        allow delete: if canChat() && (resource.data.authorUid == uid() || isOwner(ws));
+      }
+
       // ---------- Bộ đếm mã công việc #TK-xxx ----------
       match /counters/{name} {
         allow read: if isMember(ws);

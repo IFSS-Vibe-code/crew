@@ -28,6 +28,13 @@ const initial = () => ({
   budget: [],
   docs: [],
   wsInvites: [],
+  // Chat: tin mới nhất từng kênh, tin của kênh đang mở, mốc đã đọc (lưu trên máy).
+  chatLatest: {},
+  chatMessages: [],
+  chatMessagesFor: null,
+  chatLoaded: false,
+  chatError: null,
+  chatRead: {},
   loaded: {},
   errors: {},
   sync: { pendingWrites: false, fromCache: false, online: typeof navigator === 'undefined' ? true : navigator.onLine },
@@ -39,6 +46,8 @@ const initial = () => ({
     calendarMonth: null,
     calendarFilters: { task: true, event: true, notice: true },
     openTaskId: null,
+    chatActive: 'general',
+    chatLimit: 100,
   },
 });
 
